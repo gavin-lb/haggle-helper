@@ -1,3 +1,5 @@
+import groovy.json.JsonOutput
+
 plugins {
 	id 'java'
 }
@@ -17,22 +19,35 @@ def runeLiteVersion = 'latest.release'
 def pluginMainClass = 'com.hagglehelper.HaggleHelperPluginTest'
 
 dependencies {
-	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
+	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
 	compileOnly 'org.projectlombok:lombok:1.18.30'
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
 	testImplementation 'junit:junit:4.12'
-	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
-	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
 }
 
 group = 'com.hagglehelper'
 
-processResources { 
-	from('.') { 
-		include 'runelite-plugin.properties' 
-	} 
+sourceSets {
+    main {
+        resources.srcDir(layout.buildDirectory.dir("generated-resources"))
+    }
+}
+
+tasks.named('processResources') {
+	dependsOn(tasks.named('generateShopsJson'))
+	inputs.property("pluginVersion", project.version)
+	
+    filesMatching('runelite-plugin.properties') {
+        expand(version: project.version)
+    }
+
+	from('.') {
+		include 'runelite-plugin.properties'
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -72,4 +87,82 @@ tasks.register('shadowJar', Jar) {
 	group = BasePlugin.BUILD_GROUP
 	archiveClassifier.set('shadow')
 	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
+}
+
+tasks.register('generateShopsJson') {
+	description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
+	group = 'build'
+	inputs.property("pluginVersion", project.version)
+
+	def outputFile = layout.buildDirectory.file("generated-resources/shops.json")
+	outputs.file(outputFile)
+
+	doLast {
+		def shops = ShopDataFetcher.fetchAllShops(project.version.toString())
+		def file = outputFile.get().asFile
+
+		file.parentFile.mkdirs()
+		file.text = JsonOutput.toJson(shops)
+
+		println "Written ${shops.size()} shops to ${file.path}"
+	}
+}
+
+enum VersionBump {
+    PATCH,
+    MINOR,
+    MAJOR
+}
+
+def bumpVersion = { VersionBump bumpType ->
+    def propsFile = file('gradle.properties')
+    def text = propsFile.text
+
+    def matcher = text =~ /version=(\d+)\.(\d+)\.(\d+)/
+
+    if (!matcher.find()) {
+        throw new GradleException("Could not find version=x.y.z")
+    }
+
+    int major = matcher.group(1) as int
+    int minor = matcher.group(2) as int
+    int patch = matcher.group(3) as int
+
+    switch (bumpType) {
+        case VersionBump.MAJOR:
+            major++
+            minor = 0
+            patch = 0
+            break
+
+        case VersionBump.MINOR:
+            minor++
+            patch = 0
+            break
+
+        case VersionBump.PATCH:
+            patch++
+            break
+    }
+
+    def newVersion = "${major}.${minor}.${patch}"
+
+    propsFile.text = text.replaceFirst(
+        /version=\d+\.\d+\.\d+/,
+        "version=${newVersion}"
+    )
+
+    println "Version bumped to ${newVersion}"
+}
+
+tasks.register('bumpPatch') {
+    doLast { bumpVersion(VersionBump.PATCH) }
+}
+
+tasks.register('bumpMinor') {
+    doLast { bumpVersion(VersionBump.MINOR) }
+}
+
+tasks.register('bumpMajor') {
+    doLast { bumpVersion(VersionBump.MAJOR) }
 }

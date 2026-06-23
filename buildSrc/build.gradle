@@ -1,0 +1,12 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Add dependencies here if the fetcher needs e.g. OkHttp, Gson, etc.
+dependencies {
+    implementation localGroovy()
+}
