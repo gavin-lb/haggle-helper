@@ -1,4 +1,4 @@
-import groovy.json.JsonOutput
+import com.fasterxml.jackson.databind.ObjectMapper
 
 plugins {
 	id 'java'
@@ -108,9 +108,10 @@ tasks.register('generateShopsJson') {
 		def file = outputFile.get().asFile
 
 		file.parentFile.mkdirs()
-		file.text = JsonOutput.toJson(shops)
-
-		println "Written ${shops.size()} shops to ${file.path}"
+		// file.text = JsonOutput.toJson(shops)
+		file.text = new ObjectMapper().writeValueAsString(shops)
+		
+		println "Written shops data to ${file.path}"
 	}
 }
 

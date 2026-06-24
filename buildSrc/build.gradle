@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-// Add dependencies here if the fetcher needs e.g. OkHttp, Gson, etc.
 dependencies {
     implementation localGroovy()
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
 }

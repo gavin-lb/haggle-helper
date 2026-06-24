@@ -1,8 +1,8 @@
-import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Matcher
+import com.fasterxml.jackson.databind.ObjectMapper
 
 /**
  * Fetches shop and item stock data from the Old School RuneScape Wiki bucket API
@@ -211,8 +211,7 @@ class ShopDataFetcher {
         conn.setRequestProperty('User-Agent', userAgent)
         conn.setRequestProperty('Accept', 'application/json')
 
-        Map<String, Object> response =
-            (Map<String, Object>) new JsonSlurper().parseText(conn.inputStream.text)
+        Map<String, Object> response = new ObjectMapper().readValue(conn.inputStream.text, Map)
 
         if (response.error) {
             throw new IllegalStateException(
