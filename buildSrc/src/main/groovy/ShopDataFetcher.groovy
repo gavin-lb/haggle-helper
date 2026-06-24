@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 class ShopDataFetcher {
 
     static final String WIKI_BASE = 'https://oldschool.runescape.wiki/api.php?action=bucket&format=json'
-    static final String USER_AGENT_FORMAT = 'HaggleHelper(Runelite plugin)/%s (gradle build task)'
+    static final String USER_AGENT_FORMAT = 'HaggleHelper/%s (gradle build task)'
 
     static final int PAGE_SIZE = 500
     static final int BATCH_SLEEP_MS = 100
@@ -185,11 +185,11 @@ class ShopDataFetcher {
                     sellsAt: parsePercent(line.store_sell_multiplier, 100),
                     changePer: parseDelta(line.store_delta, 3.0d),
                     general: generalStores.contains(shopName.toUpperCase()),
-                    stocks: [:]
+                    defaultStocks: [:]
                 ]
             }
 
-            ((Map<String, Object>) shops[shopName]).stocks[itemId.toString()] = stock
+            ((Map<String, Object>) shops[shopName]).defaultStocks[itemId.toString()] = stock
         }
 
         return shops
@@ -283,8 +283,6 @@ class ShopDataFetcher {
                 stores << matcher.group(1).toUpperCase()
             }
         }
-
-        println "Parsed ${stores.size()} general stores from wiki"
 
         return stores
     }
