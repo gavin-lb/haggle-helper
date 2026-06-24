@@ -17,10 +17,6 @@ class ShopDataFetcher {
     static final int PAGE_SIZE = 500
     static final int BATCH_SLEEP_MS = 100
 
-    private static final Set<String> GENERAL_STORE_EXCEPTIONS = [
-        "JIMINUA'S JUNGLE STORE"
-    ] as Set<String>
-
     private static String userAgent
 
     static Map<String, Object> fetchAllShops(String version) {
@@ -39,7 +35,6 @@ class ShopDataFetcher {
         }
 
         Set<String> generalStores = generalStoresFuture.join()
-        generalStores.addAll(GENERAL_STORE_EXCEPTIONS)
         println "Fetched ${generalStores.size()} general stores"
 
         List<Map<String, Object>> storeLines = storeLinesFuture.join()
