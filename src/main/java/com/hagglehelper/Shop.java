@@ -57,7 +57,7 @@ public class Shop {
             int queued = queue.getOrDefault(itemId, 0);
             if (queued != 0)
             {
-                int previousStock = currentStocks.get(itemId);
+                int previousStock = currentStocks.getOrDefault(itemId, 0);
                 int newStock = newStocks.get(itemId);
                 log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
                 
