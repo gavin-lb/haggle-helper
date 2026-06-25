@@ -5,13 +5,10 @@
             "type": "java",
             "name": "HaggleHelper Plugin Test",
             "request": "launch",
+            "projectName": "haggle-helper",
             "mainClass": "com.hagglehelper.HaggleHelperPluginTest",
             "vmArgs": "-ea",
-            "args": "--developer-mode --debug",
-            "classPaths": [
-                "$Runtime",
-                "$Test"
-            ]
+            "args": "--developer-mode --debug"
         }
     ]
 }
