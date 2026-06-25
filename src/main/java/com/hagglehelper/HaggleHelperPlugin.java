@@ -272,6 +272,7 @@ public class HaggleHelperPlugin extends Plugin
         if (event.getGroupId() == InterfaceID.SHOPMAIN) {
             log.debug("Shop closed");
 			highlightedItemsManager.clear();
+			shop.queue.clear();
 			shop = null;
         }
     }
