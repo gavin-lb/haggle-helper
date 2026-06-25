@@ -15,16 +15,12 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.List;
  
 @Slf4j
 @Singleton
@@ -96,23 +92,13 @@ public class TrackedItemsManager
     {
         return costs.containsKey(getUnnotedId(itemId));
     }
- 
-    public Map<Integer, TrackedItem> getTrackedItemsMap()
-    {
-        return getTrackedItems().stream().collect(Collectors.toMap(TrackedItem::getItemId, Function.identity()));
-    }
 
-    public List<TrackedItem> getTrackedItems()
+    public TrackedItem[] getTrackedItems()
     {
-        List<TrackedItem> items = new ArrayList<>();
-        for (Map.Entry<Integer, Integer> e : costs.entrySet())
-        {
-            int id = e.getKey();
-            int itemValue = itemManager.getItemComposition(id).getPrice();
-            items.add(new TrackedItem(id, names.getOrDefault(id, "Item " + id), e.getValue(), itemValue));
-        }
-        items.sort(Comparator.comparing(TrackedItem::getName));
-        return items;
+        return costs.keySet().stream()
+            .map(id -> new TrackedItem(id, names.get(id), costs.get(id), itemManager.getItemComposition(id).getPrice()))
+            .sorted(Comparator.comparing(item -> item.getName()))
+            .toArray(TrackedItem[]::new);
     }
 
     public TrackedItem getTrackedItem(int itemId)

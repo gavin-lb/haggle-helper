@@ -311,12 +311,12 @@ public class HaggleHelperPanel extends PluginPanel {
     void refreshList()
     {
         clientThread.invoke(() -> {
-            List<TrackedItem> items = trackedItemsManager.getTrackedItems();
+            TrackedItem[] items = trackedItemsManager.getTrackedItems();
             SwingUtilities.invokeLater(() ->
             {
                 listPanel.removeAll();
      
-                if (items.isEmpty())
+                if (items.length == 0)
                 {
                     JLabel empty = new JLabel("No items added yet.");
                     empty.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
