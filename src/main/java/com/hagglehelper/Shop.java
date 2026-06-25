@@ -51,26 +51,29 @@ public class Shop {
 		log.debug("Updating items={} on shop={}", items, this);
         Map<Integer, Integer> newStocks = Arrays.stream(items).collect(Collectors.toMap(Item::getId, Item::getQuantity));
 
-        for (Item item : items)
+        if (currentStocks != null && !queue.isEmpty())
         {
-            int itemId = item.getId();
-            int queued = queue.getOrDefault(itemId, 0);
-            if (queued != 0)
+            for (Item item : items)
             {
-                int previousStock = currentStocks.getOrDefault(itemId, 0);
-                int newStock = newStocks.get(itemId);
-                log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
-                
-                int newQueued = queued - newStock + previousStock;
-                if (newQueued != 0)
+                int itemId = item.getId();
+                int queued = queue.getOrDefault(itemId, 0);
+                if (queued != 0)
                 {
-                    queue.put(itemId, newQueued);
-                    log.debug("newQueued={}", newQueued);
-                }
-                else
-                {
-                    queue.remove(itemId);
-                    log.debug("removed queued");
+                    int previousStock = currentStocks.getOrDefault(itemId, 0);
+                    int newStock = newStocks.get(itemId);
+                    log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
+                    
+                    int newQueued = queued - newStock + previousStock;
+                    if (newQueued != 0)
+                    {
+                        queue.put(itemId, newQueued);
+                        log.debug("newQueued={}", newQueued);
+                    }
+                    else
+                    {
+                        queue.remove(itemId);
+                        log.debug("removed queued");
+                    }
                 }
             }
         }
