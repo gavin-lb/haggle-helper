@@ -2,6 +2,7 @@ package com.hagglehelper;
 
 import com.google.inject.Provides;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
+import com.hagglehelper.Shop.UnprofitableTransactionException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -241,8 +242,9 @@ public class HaggleHelperPlugin extends Plugin
             return;
         }
 
-		if (!shop.allowTransaction(menuOption, item))
-		{
+		try {
+			overlayPanel.addProfit(shop.processTransaction(menuOption, item));
+		} catch (UnprofitableTransactionException e) {
 			event.consume();
 			client.addChatMessage(
 				ChatMessageType.GAMEMESSAGE, 

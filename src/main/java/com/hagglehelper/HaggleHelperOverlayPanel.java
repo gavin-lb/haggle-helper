@@ -17,10 +17,26 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 public class HaggleHelperOverlayPanel extends OverlayPanel
 {
-    private final HaggleHelperConfig config;
+    @Inject
+    private HaggleHelperConfig config;
 
     private Instant sessionStart;
     private int profit = 0;
+    
+    @Inject
+    private HaggleHelperOverlayPanel()
+    {
+        setPosition(OverlayPosition.TOP_LEFT);
+        panelComponent.setPreferredSize(new Dimension(220, 0));
+        
+        getMenuEntries().add(
+            new OverlayMenuEntry(
+                MenuAction.RUNELITE_OVERLAY,
+                "Reset",
+                "Haggle Helper"
+            )
+        );
+    }
 
     public void addProfit(int value) 
 	{
@@ -53,23 +69,6 @@ public class HaggleHelperOverlayPanel extends OverlayPanel
     public void reset() {
         profit = 0;
 		sessionStart = null;
-    }
-
-    @Inject
-    private HaggleHelperOverlayPanel(HaggleHelperPlugin plugin, HaggleHelperConfig config)
-    {
-        this.config = config;
-
-        setPosition(OverlayPosition.TOP_LEFT);
-        panelComponent.setPreferredSize(new Dimension(220, 0));
-        
-        getMenuEntries().add(
-            new OverlayMenuEntry(
-                MenuAction.RUNELITE_OVERLAY,
-                "Reset",
-                "Haggle Helper"
-            )
-        );
     }
 
     @Override

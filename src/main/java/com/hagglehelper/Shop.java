@@ -19,9 +19,6 @@ import net.runelite.api.Item;
 public class Shop {
     @Inject
     private HaggleHelperConfig config;
-
-    @Inject
-    private HaggleHelperOverlayPanel overlayPanel;
     
     public static final Set<String> SELL_MENU_OPTIONS = ImmutableSet.of("Sell 50", "Sell 10", "Sell 5", "Sell 1");
     public static final Set<String> BUY_MENU_OPTIONS = ImmutableSet.of("Buy 50", "Buy 10", "Buy 5", "Buy 1");
@@ -294,7 +291,7 @@ public class Shop {
         return isTradableWith(item.id);
     }
         
-    public boolean allowTransaction(String menuOption, HighlightedItem item) {
+    public int processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException {
         final int amount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
 		int profit = item.mode == InterfaceMode.INVENTORY
             ? getProfitSellTo(amount, item) 
@@ -310,16 +307,15 @@ public class Shop {
 		if (profit > amount*config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance())) 
 		{
 			log.debug("Allowing profitable transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
-			overlayPanel.addProfit(profit);
             queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
             item.numProfitable -= amount;
             item.maxProfit -= profit;
             item.currentPrice = getItemPrice(item);
-			return true;
+			return profit;
 		}
 
         log.debug("Blocked transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
-        return false;
+        throw new UnprofitableTransactionException();
     }
 
     @Override
@@ -329,4 +325,6 @@ public class Shop {
             name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral, queue
         );
     }
+
+    public class UnprofitableTransactionException extends Exception {}
 }
