@@ -7,13 +7,17 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import com.google.inject.Inject;
+import com.hagglehelper.HaggleHelperConfig.DisplayMode;
+import com.hagglehelper.HaggleHelperConfig.OverlayMode;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -24,6 +28,7 @@ import net.runelite.client.ui.overlay.tooltip.TooltipManager;
 @Slf4j
 public class HaggleHelperOverlay extends Overlay
 {
+
     @Inject
     private Client client;
 
@@ -32,20 +37,21 @@ public class HaggleHelperOverlay extends Overlay
 
     @Inject
     private HaggleHelperPlugin plugin;
-
-    private final TooltipManager tooltipManager;
-
-    public enum OverlayMode
-    {
-        NONE,
-        TRACKED,
-        ALL
-    }
+    
+    @Inject
+    private HighlightedItemsManager highlightedItemsManager;
 
     @Inject
-    public HaggleHelperOverlay(TooltipManager tooltipManager)
+    private TrackedItemsManager trackedItemsManager;
+
+    @Inject
+    private TooltipManager tooltipManager;
+
+    @Inject
+    private ItemManager itemManager;
+
+    public HaggleHelperOverlay()
     {
-        this.tooltipManager = tooltipManager;
         setLayer(OverlayLayer.ABOVE_WIDGETS);
         setPosition(OverlayPosition.DYNAMIC);
     }
@@ -54,23 +60,35 @@ public class HaggleHelperOverlay extends Overlay
     public Dimension render(Graphics2D graphics)
     {
         final Widget items = client.getWidget(InterfaceID.Shopside.ITEMS);
-        if (items == null)
+        final Widget shopItems = client.getWidget(InterfaceID.Shopmain.ITEMS);
+        if (items == null || shopItems == null)
         {
             return null;
         }
 
-        Widget[] children = items.getChildren();
-        if (children == null)
+        final Widget[] itemWidgets = items.getChildren();
+        final Widget[] shopItemWidgets = shopItems.getChildren();
+        if (itemWidgets == null || shopItemWidgets == null)
         {
             return null;
         }
 
         if (config.overlayEnabled() != OverlayMode.NONE)
         {
-            drawItemOverlay(graphics, children);
+            DisplayMode displayMode = config.displayMode();
+
+            if (displayMode.showInventory())
+            {
+                drawItemOverlay(graphics, itemWidgets, DisplayMode.INVENTORY);
+            }
+
+            if (displayMode.showShop())
+            {
+                drawItemOverlay(graphics, shopItemWidgets, DisplayMode.SHOP);
+            }
         }
 
-        if (config.tooltipEnabled())
+        if (config.tooltipEnabled() != OverlayMode.NONE)
         {
             drawTooltip();
         }
@@ -78,51 +96,41 @@ public class HaggleHelperOverlay extends Overlay
         return null;
     }
 
-    private void drawItemOverlay(Graphics2D graphics, Widget[] items)
+    private void drawItemOverlay(Graphics2D graphics, Widget[] items, DisplayMode mode)
     {
         FontMetrics fm = graphics.getFontMetrics();
         for (Widget itemWidget : items)
         {
-            if (itemWidget == null || itemWidget.getItemId() <= 0)
+            if (itemWidget == null)
             {
                 continue;
             }
 
-            final HighlightedItem highlightedItem = plugin.highlightedItems.get(itemWidget.getItemId());
-            if (highlightedItem == null)
+            int itemId = itemWidget.getItemId();
+            if (itemId <= 0
+                    || config.overlayEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)) 
             {
                 continue;
             }
+
+            ItemComposition itemComposition = itemManager.getItemComposition(itemId);
+            if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition.getLinkedNoteId())
+                    || !itemComposition.isTradeable()) 
+            {
+                continue;
+            }
+
+            HighlightedItem highlightedItem = highlightedItemsManager.getOrCreate(itemId, mode);
             
             final Rectangle bounds = new Rectangle(itemWidget.getBounds());
-            bounds.grow(1, 1);
-            bounds.translate(-2, -2);
-            
-            final int maxProfit = highlightedItem.maxProfit;
-            final int numProfitable = highlightedItem.numProfitable;
-            final int profitThreshold = config.profitThreshold();
-            final int bulkLossAllowance = config.bulkLossAllowance();
-            final int profit10 = highlightedItem.profits.get(10);
-            final int profit5 = highlightedItem.profits.get(5);
-            final int profit1 = highlightedItem.profits.get(1);
-            final Color color;
 
-            if (maxProfit <= profitThreshold)
-            {
-                color = config.unprofitableColor();
-            }
-            else if (profit10 > 10*profitThreshold && profit10 > Math.max(profit5, profit1) && (numProfitable >= 10 || maxProfit - profit10 < bulkLossAllowance))
-            {
-                color = config.tenProfitableColor();
-            }
-            else if (profit5 > 5*profitThreshold && profit5 > profit1 && (numProfitable >= 5 || maxProfit - profit5 < bulkLossAllowance))
-            {
-                color = config.fiveProfitableColor();
-            }
-            else
-            {
-                color = config.oneProfitableColor();
-            }
+            Dimension padding = config.boxPadding();
+            bounds.grow(padding.width, padding.height);
+
+            Dimension offset = config.boxOffset();
+            bounds.translate(offset.width-2, offset.height-2);
+
+            Color color = highlightedItem.color;
 
             if (config.showBoxFill()) 
             {
@@ -143,28 +151,30 @@ public class HaggleHelperOverlay extends Overlay
 
             if (config.showCurrentPrice())
             {
-                final String priceText = config.shortenCurrentPrice() 
-                    ? formatGp(highlightedItem.currentBuyPrice) 
-                    : String.valueOf(highlightedItem.currentBuyPrice);
+                final String currentPriceText = config.shortenCurrentPrice() 
+                    ? formatGp(highlightedItem.currentPrice) 
+                    : String.valueOf(highlightedItem.currentPrice);
 
+                Dimension currentPriceOffset = config.currentPriceOffset();
                 OverlayUtil.renderTextLocation(
                     graphics,
                     new Point(
-                        bounds.x + config.currentPriceX() - fm.stringWidth(priceText),
-                        bounds.y + config.currentPriceY()
+                        bounds.x + currentPriceOffset.width - fm.stringWidth(currentPriceText),
+                        bounds.y + currentPriceOffset.height
                     ),
-                    priceText,
+                    currentPriceText,
                     config.currentPriceColor()
                 );
             }
 
-            if (maxProfit > profitThreshold)
+            if (highlightedItem.maxProfit > config.profitThreshold())
             {
                 if (config.showNumber())
                 {
+                    Dimension numberOffset = config.numberOffset();
                     OverlayUtil.renderTextLocation(
                         graphics,
-                        new Point(bounds.x + config.numberX(), bounds.y + config.numberY()),
+                        new Point(bounds.x + numberOffset.width, bounds.y + numberOffset.height),
                         String.valueOf(highlightedItem.numProfitable),
                         config.numberColor()
                     );
@@ -173,14 +183,16 @@ public class HaggleHelperOverlay extends Overlay
                 if (config.showProfit())
                 {
                     final String profitText = config.shortenProfit() 
-                        ? formatGp(maxProfit) 
-                        : String.valueOf(maxProfit);
+                        ? formatGp(highlightedItem.maxProfit) 
+                        : String.valueOf(highlightedItem.maxProfit);
+
+                    Dimension profitOffset = config.profitOffset();
 
                     OverlayUtil.renderTextLocation(
                         graphics,
                         new Point(
-                            bounds.x + config.profitX() - fm.stringWidth(profitText),
-                            bounds.y + config.profitY()
+                            bounds.x + profitOffset.width - fm.stringWidth(profitText),
+                            bounds.y + profitOffset.height
                         ),
                         profitText,
                         config.profitColor()
@@ -215,8 +227,24 @@ public class HaggleHelperOverlay extends Overlay
 
 		MenuEntry menuEntry = menuEntries[last];
 		final int itemId = menuEntry.getItemId();
+        if (config.tooltipEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)) 
+        {
+            return;
+        }
+        
+        Widget widget = menuEntry.getWidget();
+        if (widget == null)
+        {
+            return;
+        }
 
-        HighlightedItem highlightedItem = plugin.highlightedItems.get(itemId);
+        HighlightedItem highlightedItem = highlightedItemsManager.getOrCreate(
+            itemId, 
+            widget.getId() == InterfaceID.Shopmain.ITEMS 
+                ? DisplayMode.SHOP
+                : DisplayMode.INVENTORY
+        );
+
         if (highlightedItem == null )
         {
             return;
@@ -229,8 +257,10 @@ public class HaggleHelperOverlay extends Overlay
         } catch (NumberFormatException e) {
             return;
         }
-        final int profit = highlightedItem.profits.get(sellAmount);
-        final int revenue = highlightedItem.revenues.get(sellAmount);
+        // TODO: add caching so these aren't recalculated every frame
+        final int profit = plugin.shop.getProfitSellTo(sellAmount, highlightedItem); 
+        final int revenue = plugin.shop.getRevenueSellTo(sellAmount, highlightedItem);
+
         final int profitThreshold = config.profitThreshold();
         final int bulkLossAllowance = config.bulkLossAllowance();
         final int loss = profit > profitThreshold && sellAmount > highlightedItem.numProfitable 

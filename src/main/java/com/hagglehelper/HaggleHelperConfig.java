@@ -1,8 +1,7 @@
 package com.hagglehelper;
 
 import java.awt.Color;
-
-import com.hagglehelper.HaggleHelperOverlay.OverlayMode;
+import java.awt.Dimension;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
@@ -14,11 +13,47 @@ public interface HaggleHelperConfig extends Config
 {
 	String GROUP = "hagglehelper";
 
+	enum OverlayMode
+    {
+        NONE,
+        TRACKED,
+        ALL
+    }
+
+	enum DisplayMode
+	{
+		INVENTORY,
+		SHOP, 
+		BOTH;
+
+		boolean showInventory()
+		{
+			return this == INVENTORY || this == BOTH;
+		}
+
+		boolean showShop()
+		{
+			return this == SHOP || this == BOTH;
+		}
+	}
+	
+	//#region root section
+	@ConfigItem(
+		keyName = "displayMode",
+		name = "Display mode",
+		description = "Which interface the plugin should be enabled for", 
+		position = 0
+	)
+	default DisplayMode displayMode()
+	{
+		return DisplayMode.BOTH;
+	}	
+	
 	@ConfigItem(
 		keyName = "overlayEnabled",
 		name = "Overlay",
-		description = "Which items overlays should be enabled for", 
-		position = 0
+		description = "Which items overlays should be enabled for (untracked items use their current GE price)", 
+		position = 1
 	)
 	default OverlayMode overlayEnabled()
 	{
@@ -28,19 +63,19 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "tooltipEnabled",
 		name = "Tooltip",
-		description = "Whether item tooltips are enabled", 
-		position = 1
+		description = "Which items tooltips should be enabled for (untracked items use their current GE price)", 
+		position = 2
 	)
-	default boolean tooltipEnabled()
+	default OverlayMode tooltipEnabled()
 	{
-		return true;
+		return OverlayMode.TRACKED;
 	}
 
 	@ConfigItem(
 		keyName = "profitInfoEnabled",
 		name = "Profit info",
 		description = "Whether the profit info panel is enabled", 
-		position = 2
+		position = 3
 	)
 	default boolean profitInfoEnabled()
 	{
@@ -51,7 +86,7 @@ public interface HaggleHelperConfig extends Config
 		keyName = "autoCost",
 		name = "Auto cost from GE",
 		description = "Automatically populate cost with the Grand Exchange price when adding an item", 
-		position = 3
+		position = 4
 	)
 	default boolean autoCost()
 	{
@@ -62,7 +97,7 @@ public interface HaggleHelperConfig extends Config
 		keyName = "profitThreshold",
 		name = "Profit threshold",
 		description = "The per-item profit margin threshold, in gp, that an item must be exceed to be considered profitable", 
-		position = 4
+		position = 5
 	)
 	default int profitThreshold()
 	{
@@ -73,7 +108,7 @@ public interface HaggleHelperConfig extends Config
 		keyName = "blockUnprofitable",
 		name = "Block unprofitable",
 		description = "Whether to block any unprofitable transactions", 
-		position = 5
+		position = 6
 	)
 	default boolean blockUnprofitable()
 	{
@@ -85,27 +120,51 @@ public interface HaggleHelperConfig extends Config
 		name = "Bulk loss allowance",
 		description = "The allowed profit loss, in gp, before a bulk transaction is blocked (eg. if less than 10 items"
 		+ " are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)", 
-		position = 6
+		position = 7
 	)
 	default int bulkLossAllowance()
 	{
 		return 50;
 	}
 
-
+	//#region Overlay box section
 	@ConfigSection(
         name = "Overlay - Box",
         description = "Overlay box display settings",
-		position = 7
+		position = 8
     )
     String boxSection = "boxSection";
+	
+	@ConfigItem(
+		keyName = "boxOffset",
+		name = "Offset",
+		description = "Pixel offsets of the overlay box",
+		section = boxSection,
+		position = 0
+	)
+	default Dimension boxOffset()
+	{
+		return new Dimension(0, 0);
+	}
+
+	@ConfigItem(
+		keyName = "boxPadding",
+		name = "Padding",
+		description = "Pixel padding of the overlay box",
+		section = boxSection,
+		position = 1
+	)
+	default Dimension boxPadding()
+	{
+		return new Dimension(1, 1);
+	}
 
 	@ConfigItem(
 		keyName = "showBoxFill",
 		name = "Show fill",
 		description = "Whether to show the fill of the box on the overlay",
 		section = boxSection,
-		position = 0
+		position = 4
 	)
 	default boolean showBoxFill()
 	{
@@ -117,7 +176,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Show border",
 		description = "Whether to show the border of the box on the overlay",
 		section = boxSection,
-		position = 0
+		position = 5
 	)
 	default boolean showBoxBorder()
 	{
@@ -129,7 +188,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Sell 10 color",
 		description = "Color used for the overlay when \"Sell 10\" of an item is profitable",
 		section = boxSection,
-		position = 1
+		position = 6
 	)
 	default Color tenProfitableColor()
 	{
@@ -141,7 +200,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Sell 5 color",
 		description = "Color used for the overlay when \"Sell 5\" of an item is profitable",
 		section = boxSection,
-		position = 2
+		position = 7
 	)
 	default Color fiveProfitableColor()
 	{
@@ -153,7 +212,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Sell 1 color",
 		description = "Color used for the overlay when \"Sell 1\" of an item is profitable",
 		section = boxSection,
-		position = 3
+		position = 8
 	)
 	default Color oneProfitableColor()
 	{
@@ -165,23 +224,24 @@ public interface HaggleHelperConfig extends Config
 		name = "Unprofitable color",
 		description = "Color used for the overlay when item is unprofitable",
 		section = boxSection,
-		position = 4
+		position = 9
 	)
 	default Color unprofitableColor()
 	{
 		return Color.RED;
 	}
 	
+	//#region Number text section
 	@ConfigSection(
-        name = "Overlay - Amount Text",
-        description = "Profitable amount text overlay settings", 
-		position = 8
+        name = "Overlay - Profitable Amount",
+        description = "Profitable amount text display settings", 
+		position = 9
     )
     String numberSection = "numberSection";
 
 	@ConfigItem(
 		keyName = "showNumber",
-		name = "Show profitable amount",
+		name = "Show",
 		description = "Whether to show the number of items that can be sold profitably on the overlay",
 		section = numberSection,
 		position = 0
@@ -192,27 +252,15 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "numberX",
-		name = "X offset",
-		description = "Horizontal offset in pixels of the number text overlay",
+		keyName = "numberOffset",
+		name = "Offset",
+		description = "Pixel offset of the number text overlay",
 		section = numberSection,
 		position = 1
 	)
-	default int numberX()
+	default Dimension numberOffset()
 	{
-		return 2;
-	}
-
-	@ConfigItem(
-		keyName = "numberY",
-		name = "Y offset",
-		description = "Vertical offset in pixels of the number text overlay",
-		section = numberSection,
-		position = 2
-	)
-	default int numberY()
-	{
-		return 34;
+		return new Dimension(2, 34);
 	}
 	
 	@ConfigItem(
@@ -220,23 +268,24 @@ public interface HaggleHelperConfig extends Config
 		name = "Color",
 		description = "Color used for number text overlay",
 		section = numberSection,
-		position = 3
+		position = 2
 	)
 	default Color numberColor()
 	{
 		return Color.WHITE;
 	}
 	
+	//#region Profit text section
 	@ConfigSection(
-        name = "Overlay - Profit Text",
-        description = "Profit overlay display settings",
-		position = 9
+        name = "Overlay - Total Profit",
+        description = "Total potential profit text display settings",
+		position = 10
     )
     String profitSection = "profitSection";
 
 	@ConfigItem(
 		keyName = "showProfit",
-		name = "Show profit",
+		name = "Show",
 		description = "Whether to show the total potential profit on the overlay",
 		section = profitSection,
 		position = 0
@@ -247,27 +296,15 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "profitX",
-		name = "X offset",
-		description = "Horizontal offset in pixels of the profit text overlay",
+		keyName = "profitOffset",
+		name = "Offset",
+		description = "Pixel offset of the profit text overlay",
 		section = profitSection,
 		position = 1
 	)
-	default int profitX()
+	default Dimension profitOffset()
 	{
-		return 38;
-	}
-
-	@ConfigItem(
-		keyName = "profitY",
-		name = "Y offset",
-		description = "Vertical offset in pixels of the profit text overlay",
-		section = profitSection,
-		position = 2
-	)
-	default int profitY()
-	{
-		return 34;
+		return new Dimension(38, 34);
 	}
 
 	@ConfigItem(
@@ -275,7 +312,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Color",
 		description = "Color used for profit text overlay",
 		section = profitSection,
-		position = 3
+		position = 2
 	)
 	default Color profitColor()
 	{
@@ -294,16 +331,17 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
+	//#region Current Price section
 	@ConfigSection(
-        name = "Overlay - Current Price Text",
+        name = "Overlay - Current Price",
         description = "Current price overlay display settings",
-		position = 10
+		position = 11
     )
     String currentPriceSection = "currentPriceSection";
 
 	@ConfigItem(
 		keyName = "showCurrentPrice",
-		name = "Show current price",
+		name = "Show",
 		description = "Whether to show the current price on the overlay",
 		section = currentPriceSection,
 		position = 0
@@ -314,27 +352,15 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "currentPriceX",
-		name = "X offset",
-		description = "Horizontal offset in pixels of the current price text overlay",
+		keyName = "currentPriceOffset",
+		name = "Offset",
+		description = "Pixel offset of the current price text overlay",
 		section = currentPriceSection,
 		position = 1
 	)
-	default int currentPriceX()
+	default Dimension currentPriceOffset()
 	{
-		return 38;
-	}
-
-	@ConfigItem(
-		keyName = "currentPriceY",
-		name = "Y offset",
-		description = "Vertical offset in pixels of the current price text overlay",
-		section = currentPriceSection,
-		position = 2
-	)
-	default int currentPriceY()
-	{
-		return 24;
+		return new Dimension(38, 24);
 	}
 
 	@ConfigItem(
@@ -342,7 +368,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Color",
 		description = "Color used for current price text overlay",
 		section = currentPriceSection,
-		position = 3
+		position = 2
 	)
 	default Color currentPriceColor()
 	{
@@ -361,6 +387,7 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
+	//#region Internal
 	@ConfigItem(
             keyName = "itemPricesJson",
             name = "Item prices (JSON)",

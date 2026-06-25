@@ -184,7 +184,7 @@ class ShopDataFetcher {
                     buysAt: parsePercent(line.store_buy_multiplier, 70),
                     sellsAt: parsePercent(line.store_sell_multiplier, 100),
                     changePer: parseDelta(line.store_delta, 3.0d),
-                    general: generalStores.contains(shopName.toUpperCase()),
+                    isGeneral: generalStores.contains(shopName.toUpperCase()),
                     defaultStocks: [:]
                 ]
             }

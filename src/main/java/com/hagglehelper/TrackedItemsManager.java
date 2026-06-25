@@ -1,9 +1,16 @@
 package com.hagglehelper;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import lombok.extern.slf4j.Slf4j;
- 
+import net.runelite.api.ItemComposition;
+import net.runelite.client.game.ItemManager;
+
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -15,6 +22,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.List;
  
 @Slf4j
@@ -23,12 +32,32 @@ public class TrackedItemsManager
 {
     @Inject
     private HaggleHelperConfig config;
+
+    @Inject 
+    private ItemManager itemManager;
  
     @Inject
     private Gson gson;
  
     private final Map<Integer, Integer> costs = new HashMap<>();
     private final Map<Integer, String> names = new LinkedHashMap<>();
+        private final LoadingCache<Integer, Integer> unnotedIds = CacheBuilder.newBuilder()
+        .maximumSize(10_000)
+        .build(new CacheLoader<>() {
+            @Override
+            public Integer load(@Nonnull Integer itemId)
+            {
+                ItemComposition item = itemManager.getItemComposition(itemId);
+                return item.getNote() == -1
+                    ? itemId
+                    : item.getLinkedNoteId();
+            }
+        });
+
+    public int getUnnotedId(int itemId)
+    {
+        return unnotedIds.getUnchecked(itemId);
+    }
  
     @Inject
     public void init()
@@ -38,11 +67,13 @@ public class TrackedItemsManager
  
     public int getCost(int itemId)
     {
-        return costs.getOrDefault(itemId, -1);
+        itemId = getUnnotedId(itemId);
+        return costs.get(itemId);
     }
  
     public void setCost(int itemId, String itemName, int cost)
     {
+        itemId = getUnnotedId(itemId);
         costs.put(itemId, cost);
         names.put(itemId, itemName);
         persist();
@@ -50,6 +81,7 @@ public class TrackedItemsManager
  
     public void removeItem(int itemId)
     {
+        itemId = getUnnotedId(itemId);
         costs.remove(itemId);
         names.remove(itemId);
         persist();
@@ -58,18 +90,43 @@ public class TrackedItemsManager
     public Set<Integer> getTrackedItemIds()
     {
         return Collections.unmodifiableSet(costs.keySet());
+    } 
+
+    public boolean isTrackedItemId(int itemId)
+    {
+        return costs.containsKey(getUnnotedId(itemId));
     }
  
+    public Map<Integer, TrackedItem> getTrackedItemsMap()
+    {
+        return getTrackedItems().stream().collect(Collectors.toMap(TrackedItem::getItemId, Function.identity()));
+    }
+
     public List<TrackedItem> getTrackedItems()
     {
-        List<TrackedItem> list = new ArrayList<>();
+        List<TrackedItem> items = new ArrayList<>();
         for (Map.Entry<Integer, Integer> e : costs.entrySet())
         {
             int id = e.getKey();
-            list.add(new TrackedItem(id, names.getOrDefault(id, "Item " + id), e.getValue()));
+            int itemValue = itemManager.getItemComposition(id).getPrice();
+            items.add(new TrackedItem(id, names.getOrDefault(id, "Item " + id), e.getValue(), itemValue));
         }
-        list.sort(Comparator.comparing(TrackedItem::getName));
-        return list;
+        items.sort(Comparator.comparing(TrackedItem::getName));
+        return items;
+    }
+
+    public TrackedItem getTrackedItem(int itemId)
+    {
+        itemId = getUnnotedId(itemId);
+
+        return isTrackedItemId(itemId)
+            ? new TrackedItem(
+                itemId, 
+                names.get(itemId), 
+                costs.get(itemId), 
+                itemManager.getItemComposition(itemId).getPrice()
+            )
+            : null;
     }
  
     public void reloadFromConfig()
@@ -130,24 +187,6 @@ public class TrackedItemsManager
             this.name = name;
             this.cost = cost;
         }
-    }
- 
-    public static class TrackedItem
-    {
-        private final int itemId;
-        private final String name;
-        private final int cost;
- 
-        public TrackedItem(int itemId, String name, int cost)
-        {
-            this.itemId = itemId;
-            this.name = name;
-            this.cost = cost;
-        }
- 
-        public int getItemId() { return itemId; }
-        public String getName() { return name; }
-        public int getCost() { return cost; }
     }
 }
  

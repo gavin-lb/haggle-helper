@@ -1,33 +1,29 @@
 package com.hagglehelper;
 
 import com.google.inject.Provides;
+import com.hagglehelper.HaggleHelperConfig.DisplayMode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.lang.reflect.Type;
 import java.awt.image.BufferedImage;
 
 import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.Item;
-import net.runelite.api.ItemComposition;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.widgets.Widget;
-import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -47,18 +43,12 @@ public class HaggleHelperPlugin extends Plugin
 {
 	@Inject
 	private Client client;
-	
-	@Inject
-	private ClientThread clientThread;
 
 	@Inject
 	private HaggleHelperConfig config;
 
 	@Inject
 	private ClientToolbar clientToolbar;
-
-	@Inject
-    private TrackedItemsManager trackedItemsManager;
 
 	@Inject
     private OverlayManager overlayManager;
@@ -72,8 +62,15 @@ public class HaggleHelperPlugin extends Plugin
 	@Inject
 	private Gson gson;
 
+	@Inject
 	private HaggleHelperPanel panel;
+
+	@Inject
+	private HighlightedItemsManager highlightedItemsManager;
+
 	private NavigationButton navButton;
+
+	public Shop shop;
 
 	private static final String SHOPS_RESOURCE = "shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>(){}.getType();
@@ -81,10 +78,9 @@ public class HaggleHelperPlugin extends Plugin
 	
 	private final Map<Integer, Integer> queuedSales = new HashMap<>();
 	
-	public Map<Integer, HighlightedItem> highlightedItems = new HashMap<>();
+	public Map<Integer, TrackedItem> trackedItems;
 	public Map<String, Shop> shopsMap = new HashMap<>();
 	
-
 	public static String VERSION;
 
 	@Override
@@ -98,6 +94,7 @@ public class HaggleHelperPlugin extends Plugin
         }
         try (InputStreamReader reader = new InputStreamReader(stream)) {
             this.shopsMap = gson.fromJson(reader, SHOP_TYPE);
+			this.shopsMap.forEach((name, shop) -> shop.name = name);
         } catch (IOException e) {
             log.error("Failed to read JSON file \"{}\": {}", SHOPS_RESOURCE, e.getMessage());
         }
@@ -115,8 +112,7 @@ public class HaggleHelperPlugin extends Plugin
 
 		overlayManager.add(inventoryOverlay);
 		overlayManager.add(overlayPanel);
-
-		clientThread.invoke(this::rebuildHighlights);
+		shop = null;
 
 		log.debug("Haggle Helper started!");
 	}
@@ -132,87 +128,11 @@ public class HaggleHelperPlugin extends Plugin
 		overlayManager.remove(inventoryOverlay);
 		overlayManager.remove(overlayPanel);
 
-		highlightedItems.clear();
+		highlightedItemsManager.clear();
 
 		log.debug("Haggle Helper stopped!");
 	}
 
-	private void getStock(Item[] shopItems)
-	{
-		Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
-        if (frame == null || frame.isHidden())
-		{
-			return;
-		}
-
-		String shopName = frame.getDynamicChildren()[1].getText();
-		Shop shop = shopsMap.get(shopName);
-		log.debug("Getting stock of shop name={}, shop={}", shopName, shop);
-		Map<Integer, Integer> shopStockMap = Arrays.stream(shopItems).collect(Collectors.toMap(Item::getId, Item::getQuantity));
-
-		Set<Integer> trackedItems = trackedItemsManager.getTrackedItemIds();
-		for (int itemId : trackedItems)
-        {
-			if (!shop.general && !shopStockMap.containsKey(itemId)) {
-				continue;
-			}
-
-			int shopStock = shopStockMap.getOrDefault(itemId, 0);
-			int itemValue = client.getItemDefinition(itemId).getPrice();
-			int buyPrice = shop.getItemBuyPrice(itemId, shopStock, itemValue); 
-			int sellPrice = shop.getItemSellPrice(itemId, shopStock, itemValue); 
-			int costPrice = trackedItemsManager.getCost(itemId);
-			int numProfitable = shop.getNumProfitable(itemId, shopStock, costPrice, itemValue, config.profitThreshold());
-			int profit = shop.getTotalProfit(itemId, shopStock, costPrice, itemValue, config.profitThreshold());
-            log.debug(
-				"itemId={} itemQuantity={} buyPrice={} sellPrice={} costPrice={} numProfitable={} profit={}", 
-				itemId, shopStock, buyPrice, sellPrice, costPrice, numProfitable, profit
-			);
-
-			HighlightedItem highlightedItem = highlightedItems.get(itemId);
-			if (highlightedItem == null)
-			{
-				continue;
-			}
-
-			Integer queued = queuedSales.get(itemId);
-			if (queued != null)
-			{
-				int previousStock = highlightedItem.currentStock;
-				log.debug("queued item, queued={} previousStock={} currentStock={}", queuedSales.get(itemId), previousStock, shopStock);
-				
-				int newQueued = queued - shopStock + previousStock;
-				if (newQueued != 0)
-				{
-					queuedSales.put(itemId, newQueued);
-					log.debug("newQueued={}", newQueued);
-				}
-				else
-				{
-					queuedSales.remove(itemId);
-					log.debug("removed queued");
-				}
-			}
-
-			highlightedItem.numProfitable = numProfitable;
-			highlightedItem.maxProfit = profit;
-			highlightedItem.itemValue = itemValue;
-			highlightedItem.currentStock = shopStock;
-			highlightedItem.costPrice = costPrice;
-			highlightedItem.currentBuyPrice = buyPrice;
-			highlightedItem.currentSellPrice = sellPrice;
-
-			for (int qty : new int[]{1, 5, 10, 50}) 
-			{
-				highlightedItem.profits.put(qty, shop.getProfit(qty, itemId, shopStock, costPrice, itemValue));
-				highlightedItem.revenues.put(qty, shop.getRevenue(qty, itemId, shopStock, itemValue));
-			}
-
-			highlightedItem.shop = shop;
-			
-        }
-	}
-	
 	private static String getVersion()
 	{
 		try (InputStream in = HaggleHelperPlugin.class.getResourceAsStream("/runelite-plugin.properties"))
@@ -232,37 +152,6 @@ public class HaggleHelperPlugin extends Plugin
 		}
 	}
 
-	public void clearHighlights()
-	{
-		highlightedItems.clear();
-
-		for (int itemId : trackedItemsManager.getTrackedItemIds())
-		{
-			HighlightedItem highlightedItem = new HighlightedItem(itemId);
-			highlightedItems.put(itemId, highlightedItem);
-
-			ItemComposition item = client.getItemDefinition(itemId);
-			highlightedItems.put(item.getLinkedNoteId(), highlightedItem);
-		}
-	}
-
-	public void rebuildHighlights()
-	{
-		clearHighlights();
-
-		// If shop interface already open we need to immediately repopulate from stock values
-		Widget items = client.getWidget(InterfaceID.Shopmain.ITEMS);
-		Widget[] children;
-		if (items != null && (children = items.getDynamicChildren()) != null)
-		{
-			getStock(
-				Arrays.stream(children).map(
-					item -> new Item(item.getItemId(), item.getItemQuantity())
-				).toArray(Item[]::new)
-			);
-		}
-	}
-	
 	public static String formatGp(int gp)
     {
         if (gp >= 10_000_000) return String.format("%,.2fM", gp / 1_000_000.0);
@@ -273,12 +162,10 @@ public class HaggleHelperPlugin extends Plugin
 	@Subscribe
     protected void onConfigChanged(ConfigChanged event)
     {
-        if (!event.getGroup().equals(HaggleHelperConfig.GROUP))
+        if (event.getGroup().equals(HaggleHelperConfig.GROUP))
         {
-            return;
+			highlightedItemsManager.clear();
         }
-
-        clientThread.invoke(this::rebuildHighlights);
     }
 
 	@Subscribe
@@ -286,17 +173,36 @@ public class HaggleHelperPlugin extends Plugin
 	{
 		if (event.getContainerId() != INVENTORY_CONTAINER_ID && client.getWidget(InterfaceID.Shopmain.ITEMS) != null) 
 		{
+			if (shop == null)
+			{
+				Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
+				if (frame == null || frame.isHidden())
+				{
+					return;
+				}
+
+				String shopName = frame.getDynamicChildren()[1].getText();
+				log.debug("Getting shop with shopsName={}", shopName);
+				shop = shopsMap.get(shopName);
+				injector.injectMembers(shop);
+				log.debug("Setting shop={}", shop);
+			}
+
 			log.debug(
 				"Shop container changed: event={} ItemContainerId={} ContainerId={} items={}",
 				event, event.getItemContainer().getId(), event.getContainerId(), event.getItemContainer().getItems()
 			);
 
-			getStock(event.getItemContainer().getItems());
+			shop.updateStock(event.getItemContainer().getItems());
+			highlightedItemsManager.clear();
 		}
 	}
 
 	@Subscribe
     protected void onMenuOptionClicked(MenuOptionClicked event) {
+		// TODO: move unprofitability checking logic to Shop class
+		// TODO: add differentiation between selling and buying from shop
+		// TODO: only check profitability of highlighted items 
         if (!config.blockUnprofitable()) 
 		{
 			return;
@@ -320,18 +226,19 @@ public class HaggleHelperPlugin extends Plugin
 		}
 
 		int eventItemId = event.getItemId();
-		HighlightedItem item = highlightedItems.get(eventItemId);
+		// TODO: fix mode
+		HighlightedItem item = highlightedItemsManager.getOrCreate(eventItemId, DisplayMode.INVENTORY);
 		if (item == null)
 		{
 			return;
 		}
 
 		// in the case of a noted item `eventItemId` will be different to `item.itemId`
-		int itemId = item.itemId;
+		int itemId = item.id;
 			
 		final int sellAmount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
 		final int queued = queuedSales.getOrDefault(itemId, 0);
-		int profit = item.profits.get(sellAmount);
+		int profit = shop.getProfitSellTo(sellAmount, item);
 		int profitDelta = item.maxProfit - profit;
 		int numProfitable = item.numProfitable;
 
@@ -341,9 +248,10 @@ public class HaggleHelperPlugin extends Plugin
 
 			numProfitable -= queued;
 
-			int virtualStock = item.currentStock + queued;
-			profit = item.shop.getProfit(sellAmount, itemId, virtualStock, item.costPrice, item.itemValue);
-			profitDelta = item.shop.getProfitDelta(sellAmount, itemId, virtualStock, item.costPrice, item.itemValue, config.profitThreshold());
+			// TODO: reimplement this feature
+			// int virtualStock = item.currentStock + queued;
+			// profit = item.shop.getProfit(sellAmount, itemId, virtualStock, item.cost, item.itemValue);
+			// profitDelta = item.shop.getProfitDelta(sellAmount, itemId, virtualStock, item.cost, item.itemValue, config.profitThreshold());
 		}
 		
 		if (profit > sellAmount*config.profitThreshold() && (sellAmount <= numProfitable || profitDelta <= config.bulkLossAllowance())) 
@@ -383,7 +291,8 @@ public class HaggleHelperPlugin extends Plugin
         if (event.getGroupId() == InterfaceID.SHOPMAIN) {
             log.debug("Shop closed");
 			queuedSales.clear();
-			clearHighlights();
+			highlightedItemsManager.clear();
+			shop = null;
         }
     }
 		

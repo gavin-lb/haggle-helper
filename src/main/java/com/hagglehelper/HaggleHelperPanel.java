@@ -1,7 +1,6 @@
 package com.hagglehelper;
 
 import com.google.inject.Inject;
-import com.hagglehelper.TrackedItemsManager.TrackedItem;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -47,10 +46,10 @@ public class HaggleHelperPanel extends PluginPanel {
     private TrackedItemsManager trackedItemsManager;
 
     @Inject
-	private HaggleHelperConfig config;
+    private HighlightedItemsManager highlightedItemsManager;
 
     @Inject
-	private HaggleHelperPlugin plugin;
+	private HaggleHelperConfig config;
 
     @Inject
     private ClientThread clientThread;
@@ -119,6 +118,7 @@ public class HaggleHelperPanel extends PluginPanel {
 
         add(centre, BorderLayout.CENTER);
         
+        refreshList();        
         revalidate();
         repaint();
     }
@@ -217,7 +217,6 @@ public class HaggleHelperPanel extends PluginPanel {
         scroll.setPreferredSize(new Dimension(0, 300));
         scroll.getViewport().setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        refreshList();
         return scroll;
     }
 
@@ -259,7 +258,7 @@ public class HaggleHelperPanel extends PluginPanel {
 
     private void handleItemResolved(ItemPrice item)
     {
-        resolvedItemId   = item.getId();
+        resolvedItemId = item.getId();
         resolvedItemName = item.getName();
         searchFeedbackLabel.setForeground(new Color(0, 200, 80));
         searchFeedbackLabel.setText("✔ " + resolvedItemName);
@@ -311,30 +310,32 @@ public class HaggleHelperPanel extends PluginPanel {
 
     void refreshList()
     {
-        SwingUtilities.invokeLater(() ->
-        {
-            listPanel.removeAll();
- 
+        clientThread.invoke(() -> {
             List<TrackedItem> items = trackedItemsManager.getTrackedItems();
-            if (items.isEmpty())
+            SwingUtilities.invokeLater(() ->
             {
-                JLabel empty = new JLabel("No items added yet.");
-                empty.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-                empty.setFont(FontManager.getRunescapeSmallFont());
-                empty.setBorder(new EmptyBorder(8, 8, 8, 8));
-                listPanel.add(empty);
-            }
-            else
-            {
-                for (TrackedItem ti : items)
+                listPanel.removeAll();
+     
+                if (items.isEmpty())
                 {
-                    listPanel.add(buildItemRow(ti));
+                    JLabel empty = new JLabel("No items added yet.");
+                    empty.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+                    empty.setFont(FontManager.getRunescapeSmallFont());
+                    empty.setBorder(new EmptyBorder(8, 8, 8, 8));
+                    listPanel.add(empty);
                 }
-            }
- 
-            listPanel.revalidate();
-            listPanel.repaint();
-            clientThread.invoke(plugin::rebuildHighlights);
+                else
+                {
+                    for (TrackedItem ti : items)
+                    {
+                        listPanel.add(buildItemRow(ti));
+                    }
+                }
+     
+                listPanel.revalidate();
+                listPanel.repaint();
+                highlightedItemsManager.clear();
+            });
         });
     }
 

@@ -1,43 +1,53 @@
 package com.hagglehelper;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.awt.Color;
 
 public class HighlightedItem 
 {
-    public int itemId;
+    public int id;
+    public int value;
+    public int cost;
+    
     public int numProfitable;
     public int maxProfit;
-    public int itemValue;
-    public int currentStock;
-    public int costPrice;
-    public int currentBuyPrice;
-    public int currentSellPrice;
-    public HashMap<Integer, Integer> profits;
-    public HashMap<Integer, Integer> revenues;
-    public Shop shop;
+    public int currentPrice;
+    public Color color;
 
-    public HighlightedItem(int itemId) 
+    public HighlightedItem(TrackedItem item) 
     {
-        this.itemId = itemId;
-        this.profits = new HashMap<>(Map.of(
-            1, 0, 
-            5, 0, 
-            10, 0
-        ));
-        this.revenues = new HashMap<>(Map.of(
-            1, 0, 
-            5, 0, 
-            10, 0
-        ));
+        this.id = item.getItemId();
+        this.value = item.getValue();
+        this.cost = item.getCost();
+    }
+    public HighlightedItem(int id, int value, int cost) 
+    {
+        this.id = id;
+        this.value = value;
+        this.cost = cost;
+    }
+
+    public void sellTo(Shop shop) 
+    {   
+        this.numProfitable = shop.getNumProfitableSellTo(this);
+        this.maxProfit = shop.getTotalProfitSellTo(this);
+        this.currentPrice = shop.getItemPriceSellTo(this);
+        this.color = shop.getColorSellTo(this);
+    }
+    
+    public void buyFrom(Shop shop) 
+    {   
+        this.numProfitable = shop.getNumProfitableBuyFrom(this);
+        this.maxProfit = shop.getTotalProfitBuyFrom(this);
+        this.currentPrice = shop.getItemPriceBuyFrom(this);
+        this.color = shop.getColorBuyFrom(this);
     }
 
     @Override
     public String toString()
     {
         return String.format(
-            "HighlightedItem{itemId=%s, numProfitable=%s, totalProfit=%s, itemValue=%s, currentStock=%s, costPrice=%s, profits=%s, revenues=%s, shop=%s}", 
-            this.itemId, this.numProfitable, this.maxProfit, this.itemValue, this.currentStock, this.costPrice, this.profits, this.revenues, this.shop
+            "HighlightedItem{id=%d, value=%d, cost=%d, numProfitable=%d, maxProfit=%d, currentPrice=%d}", 
+            this.id, this.value, this.cost, this.numProfitable, this.maxProfit, this.currentPrice
         );
     }
 }
