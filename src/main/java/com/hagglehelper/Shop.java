@@ -38,7 +38,9 @@ public class Shop {
 
     public int getStock(int itemId)
     {
-        return currentStocks.getOrDefault(itemId, 0) + queue.getOrDefault(itemId, 0);
+        return currentStocks != null
+            ? currentStocks.getOrDefault(itemId, 0) + queue.getOrDefault(itemId, 0)
+            : 0;
     }
 
     public int getStock(HighlightedItem item)
