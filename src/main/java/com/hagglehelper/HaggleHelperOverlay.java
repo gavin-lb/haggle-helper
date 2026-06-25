@@ -225,7 +225,7 @@ public class HaggleHelperOverlay extends Overlay
 
 		MenuEntry menuEntry = menuEntries[last];
 		final int itemId = menuEntry.getItemId();
-        if (config.tooltipEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)) 
+        if (itemId <= 0 || config.tooltipEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)) 
         {
             return;
         }
