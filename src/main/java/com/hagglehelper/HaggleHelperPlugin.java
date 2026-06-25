@@ -1,7 +1,7 @@
 package com.hagglehelper;
 
 import com.google.inject.Provides;
-import com.hagglehelper.HaggleHelperConfig.DisplayMode;
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -75,8 +75,6 @@ public class HaggleHelperPlugin extends Plugin
 	private static final String SHOPS_RESOURCE = "shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>(){}.getType();
 	private static final int INVENTORY_CONTAINER_ID = 93;
-	
-	private final Map<Integer, Integer> queuedSales = new HashMap<>();
 	
 	public Map<Integer, TrackedItem> trackedItems;
 	public Map<String, Shop> shopsMap = new HashMap<>();
@@ -200,21 +198,12 @@ public class HaggleHelperPlugin extends Plugin
 
 	@Subscribe
     protected void onMenuOptionClicked(MenuOptionClicked event) {
-		// TODO: move unprofitability checking logic to Shop class
-		// TODO: add differentiation between selling and buying from shop
-		// TODO: only check profitability of highlighted items 
         if (!config.blockUnprofitable()) 
 		{
 			return;
 		}
 
 		if (client.getWidget(InterfaceID.Shopmain.ITEMS) == null) 
-		{
-			return;
-		}
-
-		String menuOption = event.getMenuOption().replaceAll("<.*>", "");
-		if (!Shop.MENU_OPTIONS.contains(menuOption)) 
 		{
 			return;
 		}
@@ -226,50 +215,42 @@ public class HaggleHelperPlugin extends Plugin
 		}
 
 		int eventItemId = event.getItemId();
-		// TODO: fix mode
-		HighlightedItem item = highlightedItemsManager.getOrCreate(eventItemId, DisplayMode.INVENTORY);
+		
+		String menuOption = event.getMenuOption().replaceAll("<.*>", "");
+		HighlightedItem item;
+		if (Shop.BUY_MENU_OPTIONS.contains(menuOption)) 
+		{
+			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.SHOP);
+		}
+		else if (Shop.SELL_MENU_OPTIONS.contains(menuOption))
+		{
+			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.INVENTORY);
+		}
+		else
+		{
+			return;
+		}
+
 		if (item == null)
 		{
 			return;
 		}
-
-		// in the case of a noted item `eventItemId` will be different to `item.itemId`
-		int itemId = item.id;
-			
-		final int sellAmount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
-		final int queued = queuedSales.getOrDefault(itemId, 0);
-		int profit = shop.getProfitSellTo(sellAmount, item);
-		int profitDelta = item.maxProfit - profit;
-		int numProfitable = item.numProfitable;
-
-		if (queued > 0) 
-		{
-			log.debug("Transaction while queued, queued={} sellAmount={} itemId={}", queued, sellAmount, itemId);
-
-			numProfitable -= queued;
-
-			// TODO: reimplement this feature
-			// int virtualStock = item.currentStock + queued;
-			// profit = item.shop.getProfit(sellAmount, itemId, virtualStock, item.cost, item.itemValue);
-			// profitDelta = item.shop.getProfitDelta(sellAmount, itemId, virtualStock, item.cost, item.itemValue, config.profitThreshold());
-		}
 		
-		if (profit > sellAmount*config.profitThreshold() && (sellAmount <= numProfitable || profitDelta <= config.bulkLossAllowance())) 
-		{
-			log.debug("Allowing profitable transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", sellAmount, queued, profit, profitDelta, item);
-			overlayPanel.addProfit(profit);
-			queuedSales.put(itemId, queued + sellAmount);
-			return;
-		}
+        if (item.mode != config.interfaceMode() && config.interfaceMode() != InterfaceMode.BOTH)
+        {
+            return;
+        }
 
-		event.consume();
-		log.debug("Blocked transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", sellAmount, queued, profit, profitDelta, item);
-		client.addChatMessage(
-			ChatMessageType.GAMEMESSAGE, 
-			"", 
-			String.format("[Haggle Helper]<col=ff0000> Blocked unprofitable transaction:</col> %s %s", menuOption, event.getMenuTarget()), 
-			null
-		);
+		if (!shop.allowTransaction(menuOption, item))
+		{
+			event.consume();
+			client.addChatMessage(
+				ChatMessageType.GAMEMESSAGE, 
+				"", 
+				String.format("[Haggle Helper]<col=ff0000> Blocked unprofitable transaction:</col> %s %s", menuOption, event.getMenuTarget()), 
+				null
+			);
+		}
     }
 
 	@Subscribe
@@ -290,7 +271,6 @@ public class HaggleHelperPlugin extends Plugin
     protected void onWidgetClosed(WidgetClosed event) {
         if (event.getGroupId() == InterfaceID.SHOPMAIN) {
             log.debug("Shop closed");
-			queuedSales.clear();
 			highlightedItemsManager.clear();
 			shop = null;
         }

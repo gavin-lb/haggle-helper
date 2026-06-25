@@ -6,7 +6,7 @@ import java.util.Map;
 import javax.inject.Singleton;
 
 import com.google.inject.Inject;
-import com.hagglehelper.HaggleHelperConfig.DisplayMode;
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.game.ItemManager;
@@ -57,10 +57,10 @@ public class HighlightedItemsManager {
         return item;
     }
 
-    public HighlightedItem getOrCreate(int itemId, DisplayMode mode)
+    public HighlightedItem getOrCreate(int itemId, InterfaceMode mode)
     {
         itemId = trackedItemsManager.getUnnotedId(itemId);
-        return mode == DisplayMode.INVENTORY 
+        return mode == InterfaceMode.INVENTORY 
             ? inventoryItems.computeIfAbsent(itemId, this::createInventoryItem)
             : shopItems.computeIfAbsent(itemId, this::createShopItem);
     }

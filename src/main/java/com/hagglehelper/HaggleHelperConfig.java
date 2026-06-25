@@ -20,7 +20,7 @@ public interface HaggleHelperConfig extends Config
         ALL
     }
 
-	enum DisplayMode
+	enum InterfaceMode
 	{
 		INVENTORY,
 		SHOP, 
@@ -39,14 +39,14 @@ public interface HaggleHelperConfig extends Config
 	
 	//#region root section
 	@ConfigItem(
-		keyName = "displayMode",
-		name = "Display mode",
-		description = "Which interface the plugin should be enabled for", 
+		keyName = "interfaceMode",
+		name = "Interface mode",
+		description = "Which interface(s) the plugin should be enabled for", 
 		position = 0
 	)
-	default DisplayMode displayMode()
+	default InterfaceMode interfaceMode()
 	{
-		return DisplayMode.BOTH;
+		return InterfaceMode.BOTH;
 	}	
 	
 	@ConfigItem(
@@ -321,8 +321,8 @@ public interface HaggleHelperConfig extends Config
 
 	@ConfigItem(
 		keyName = "shortenProfit",
-		name = "Shorten",
-		description = "Whether to shorten the profit text when appropriate, eg. 54321 becomes 54.3k",
+		name = "Abbreviate",
+		description = "Whether to abbreviate the profit text when appropriate, eg. 54321 becomes 54.3k",
 		section = profitSection,
 		position = 3
 	)
@@ -377,8 +377,8 @@ public interface HaggleHelperConfig extends Config
 	
 	@ConfigItem(
 		keyName = "shortenCurrentPrice",
-		name = "Shorten",
-		description = "Whether to shorten the current price text when appropriate, eg. 54321 becomes 54.3k",
+		name = "Abbreviate",
+		description = "Whether to abbreviate the current price text when appropriate, eg. 54321 becomes 54.3k",
 		section = currentPriceSection,
 		position = 3
 	)

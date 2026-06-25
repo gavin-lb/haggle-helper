@@ -2,6 +2,8 @@ package com.hagglehelper;
 
 import java.awt.Color;
 
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
+
 public class HighlightedItem 
 {
     public int id;
@@ -12,7 +14,8 @@ public class HighlightedItem
     public int maxProfit;
     public int currentPrice;
     public Color color;
-
+    public InterfaceMode mode;
+    
     public HighlightedItem(TrackedItem item) 
     {
         this.id = item.getItemId();
@@ -32,6 +35,7 @@ public class HighlightedItem
         this.maxProfit = shop.getTotalProfitSellTo(this);
         this.currentPrice = shop.getItemPriceSellTo(this);
         this.color = shop.getColorSellTo(this);
+        this.mode = InterfaceMode.INVENTORY;
     }
     
     public void buyFrom(Shop shop) 
@@ -40,6 +44,7 @@ public class HighlightedItem
         this.maxProfit = shop.getTotalProfitBuyFrom(this);
         this.currentPrice = shop.getItemPriceBuyFrom(this);
         this.color = shop.getColorBuyFrom(this);
+        this.mode = InterfaceMode.SHOP;
     }
 
     @Override

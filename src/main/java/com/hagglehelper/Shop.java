@@ -2,6 +2,7 @@ package com.hagglehelper;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableSet;
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Item;
@@ -17,8 +19,12 @@ import net.runelite.api.Item;
 public class Shop {
     @Inject
     private HaggleHelperConfig config;
+
+    @Inject
+    private HaggleHelperOverlayPanel overlayPanel;
     
-    public static final Set<String> MENU_OPTIONS = ImmutableSet.of("Sell 50", "Sell 10", "Sell 5", "Sell 1");
+    public static final Set<String> SELL_MENU_OPTIONS = ImmutableSet.of("Sell 50", "Sell 10", "Sell 5", "Sell 1");
+    public static final Set<String> BUY_MENU_OPTIONS = ImmutableSet.of("Buy 50", "Buy 10", "Buy 5", "Buy 1");
 
     String name;
     int sellsAt;
@@ -27,17 +33,55 @@ public class Shop {
     Map<Integer, Integer> defaultStocks;
     Map<Integer, Integer> currentStocks;
     boolean isGeneral;
+    
+    public final Map<Integer, Integer> queue = new HashMap<>();
+
+    public int getStock(int itemId)
+    {
+        return currentStocks.getOrDefault(itemId, 0) + queue.getOrDefault(itemId, 0);
+    }
+
+    public int getStock(HighlightedItem item)
+    {
+        return getStock(item.id);
+    }
 
     @SuppressWarnings("null")
     public void updateStock(Item[] items) {
 		log.debug("Updating items={} on shop={}", items, this);
-        currentStocks = Arrays.stream(items).collect(Collectors.toMap(Item::getId, Item::getQuantity));
+        Map<Integer, Integer> newStocks = Arrays.stream(items).collect(Collectors.toMap(Item::getId, Item::getQuantity));
+
+        for (Item item : items)
+        {
+            int itemId = item.getId();
+            int queued = queue.getOrDefault(itemId, 0);
+            if (queued != 0)
+            {
+                int previousStock = currentStocks.get(itemId);
+                int newStock = newStocks.get(itemId);
+                log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
+                
+                int newQueued = queued - newStock + previousStock;
+                if (newQueued != 0)
+                {
+                    queue.put(itemId, newQueued);
+                    log.debug("newQueued={}", newQueued);
+                }
+                else
+                {
+                    queue.remove(itemId);
+                    log.debug("removed queued");
+                }
+            }
+        }
+        
+        currentStocks = newStocks;
     }
 
     public int getStockDelta(int itemId)
     {
         int defaultStock = defaultStocks.getOrDefault(itemId, 0);
-        int currentStock = currentStocks.getOrDefault(itemId, 0);
+        int currentStock = getStock(itemId);
         return defaultStock - currentStock;
     }
 
@@ -50,6 +94,13 @@ public class Shop {
     { 
         int delta = getStockDelta(itemId);
         return (int) Math.floor(itemValue * (multiplier + delta*changePer) / 100);
+    }
+    
+    public int getItemPrice(HighlightedItem item) 
+    {
+        return item.mode == InterfaceMode.INVENTORY
+            ? getItemPriceSellTo(item.id, item.value)
+            : getItemPriceBuyFrom(item.id, item.value);
     }
 
     public int getItemPriceSellTo(HighlightedItem item) 
@@ -89,7 +140,7 @@ public class Shop {
         float percent = 100f * (cost - config.profitThreshold()) / itemValue;
         float num = (percent - sellsAt) / changePer;
         int adjustedNum = Math.max(0, (int) Math.ceil(num) - getStockDelta(itemId));
-        return Math.min(currentStocks.get(itemId), adjustedNum);
+        return Math.min(getStock(itemId), adjustedNum);
     }
 
     public int getNumProfitableBuyFrom(HighlightedItem item) 
@@ -237,12 +288,40 @@ public class Shop {
     public boolean isTradableWith(HighlightedItem item) {
         return isTradableWith(item.id);
     }
+        
+    public boolean allowTransaction(String menuOption, HighlightedItem item) {
+        final int amount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
+		int profit = item.mode == InterfaceMode.INVENTORY
+            ? getProfitSellTo(amount, item) 
+            : getProfitBuyFrom(amount, item);
+		int profitDelta = item.maxProfit - profit;
+
+        int queued = queue.getOrDefault(item.id, 0);
+		if (queued != 0) 
+		{
+			log.debug("Transaction while queued, queued={} amount={} item={}", queued, amount, item);
+		}
+		
+		if (profit > amount*config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance())) 
+		{
+			log.debug("Allowing profitable transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+			overlayPanel.addProfit(profit);
+            queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
+            item.numProfitable -= amount;
+            item.maxProfit -= profit;
+            item.currentPrice = getItemPrice(item);
+			return true;
+		}
+
+        log.debug("Blocked transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+        return false;
+    }
 
     @Override
     public String toString() {
         return String.format(
-            "Shop{name=%s, sellsAt=%d, buysAt=%d, changePer=%f, defaultStocks=%s, currentStocks=%s, general=%s}", 
-            name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral
+            "Shop{name=%s, sellsAt=%d, buysAt=%d, changePer=%f, defaultStocks=%s, currentStocks=%s, general=%s, queue=%s}", 
+            name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral, queue
         );
     }
 }

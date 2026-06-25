@@ -7,7 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
 import com.google.inject.Inject;
-import com.hagglehelper.HaggleHelperConfig.DisplayMode;
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 import com.hagglehelper.HaggleHelperConfig.OverlayMode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -75,16 +75,16 @@ public class HaggleHelperOverlay extends Overlay
 
         if (config.overlayEnabled() != OverlayMode.NONE)
         {
-            DisplayMode displayMode = config.displayMode();
+            InterfaceMode mode = config.interfaceMode();
 
-            if (displayMode.showInventory())
+            if (mode.showInventory())
             {
-                drawItemOverlay(graphics, itemWidgets, DisplayMode.INVENTORY);
+                drawItemOverlay(graphics, itemWidgets, InterfaceMode.INVENTORY);
             }
 
-            if (displayMode.showShop())
+            if (mode.showShop())
             {
-                drawItemOverlay(graphics, shopItemWidgets, DisplayMode.SHOP);
+                drawItemOverlay(graphics, shopItemWidgets, InterfaceMode.SHOP);
             }
         }
 
@@ -96,7 +96,7 @@ public class HaggleHelperOverlay extends Overlay
         return null;
     }
 
-    private void drawItemOverlay(Graphics2D graphics, Widget[] items, DisplayMode mode)
+    private void drawItemOverlay(Graphics2D graphics, Widget[] items, InterfaceMode mode)
     {
         FontMetrics fm = graphics.getFontMetrics();
         for (Widget itemWidget : items)
@@ -211,7 +211,6 @@ public class HaggleHelperOverlay extends Overlay
 
     private void drawTooltip()
     {
-        
         if (client.isMenuOpen())
 		{
 			return;
@@ -219,7 +218,6 @@ public class HaggleHelperOverlay extends Overlay
 
 		MenuEntry[] menuEntries = client.getMenu().getMenuEntries();
 		final int last = menuEntries.length - 1;
-
         if (last < 0)
 		{
 			return;
@@ -238,40 +236,77 @@ public class HaggleHelperOverlay extends Overlay
             return;
         }
 
-        HighlightedItem highlightedItem = highlightedItemsManager.getOrCreate(
-            itemId, 
-            widget.getId() == InterfaceID.Shopmain.ITEMS 
-                ? DisplayMode.SHOP
-                : DisplayMode.INVENTORY
-        );
+        InterfaceMode mode = widget.getId() == InterfaceID.Shopmain.ITEMS
+            ? InterfaceMode.SHOP
+            : InterfaceMode.INVENTORY;
+        if (mode != config.interfaceMode() && config.interfaceMode() != InterfaceMode.BOTH)
+        {
+            return;
+        }
 
-        if (highlightedItem == null )
+        HighlightedItem item = highlightedItemsManager.getOrCreate(itemId, mode);
+        if (item == null)
         {
             return;
         }
 
         String menuOption = menuEntry.getOption().replaceAll("<.*>", "");
-        final int sellAmount;
+        final int transactionAmount;
         try {
-            sellAmount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
+            transactionAmount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
         } catch (NumberFormatException e) {
             return;
         }
-        // TODO: add caching so these aren't recalculated every frame
-        final int profit = plugin.shop.getProfitSellTo(sellAmount, highlightedItem); 
-        final int revenue = plugin.shop.getRevenueSellTo(sellAmount, highlightedItem);
+
+        final int stockAmount;
+        final int amount;
+        final int profit;
+        final int revenue;
+        switch (item.mode) {
+            case INVENTORY:
+                stockAmount = widget.getItemQuantity();
+                amount = Math.min(transactionAmount, stockAmount);
+                profit = plugin.shop.getProfitSellTo(amount, item);
+                revenue = plugin.shop.getRevenueSellTo(amount, item);
+                break;
+                
+            default:
+                stockAmount = plugin.shop.getStock(item);
+                amount = Math.min(transactionAmount, stockAmount);
+                profit = plugin.shop.getProfitBuyFrom(amount, item);
+                revenue = plugin.shop.getRevenueBuyFrom(amount, item);
+        }
 
         final int profitThreshold = config.profitThreshold();
         final int bulkLossAllowance = config.bulkLossAllowance();
-        final int loss = profit > profitThreshold && sellAmount > highlightedItem.numProfitable 
-            ? highlightedItem.maxProfit - profit 
+
+        final int loss = profit > profitThreshold && transactionAmount > item.numProfitable 
+            ? item.maxProfit - profit 
             : 0;
-        final String profitColor = profit <= sellAmount*profitThreshold ? "ff0000" : "ffff00";
-        final String lossColor = loss > bulkLossAllowance ? "ff0000" : "ffff00";
-        final String lossText = loss > 0 ? String.format("<col=%s>(-%,d gp)</col>", lossColor, loss): "";
+
+        final String option = transactionAmount != amount 
+            ? String.format("%s <col=ff0000>(%d)</col>", menuOption, amount) 
+            : menuOption;
+
+        final String profitColor = profit <= transactionAmount*profitThreshold 
+            ? "ff0000" 
+            : "ffff00";
+
+        final String lossColor = loss > bulkLossAllowance 
+            ? "ff0000" 
+            : "ffff00";
+
+        final String lossText = loss > 0 
+            ? String.format("<col=%s>(-%,d gp)</col>", lossColor, loss)
+            : "";
+
+        final String noun = item.mode == InterfaceMode.SHOP 
+            ? "cost" 
+            : "value";
+
         tooltipManager.add(new Tooltip(
-            String.format("%s revenue: <col=ffff00>%,d gp</col><br>%s profit: <col=%s>%,d gp</col> %s", 
-            menuOption, revenue, menuOption, profitColor, profit, lossText)
+            String.format("%s %s: <col=ffff00>%,d gp</col><br>%s profit: <col=%s>%,d gp</col> %s", 
+            option, noun, revenue, option, profitColor, profit, lossText)
         ));
     }
 }
