@@ -4,12 +4,10 @@ import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import com.google.common.collect.ImmutableSet;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +17,6 @@ import net.runelite.api.Item;
 public class Shop {
     @Inject
     private HaggleHelperConfig config;
-    
-    public static final Set<String> SELL_MENU_OPTIONS = ImmutableSet.of("Sell 50", "Sell 10", "Sell 5", "Sell 1");
-    public static final Set<String> BUY_MENU_OPTIONS = ImmutableSet.of("Buy 50", "Buy 10", "Buy 5", "Buy 1");
 
     String name;
     int sellsAt;

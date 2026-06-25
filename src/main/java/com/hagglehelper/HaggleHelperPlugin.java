@@ -219,11 +219,11 @@ public class HaggleHelperPlugin extends Plugin
 		
 		String menuOption = event.getMenuOption().replaceAll("<.*>", "");
 		HighlightedItem item;
-		if (Shop.BUY_MENU_OPTIONS.contains(menuOption)) 
+		if (menuOption.contains("Buy")) 
 		{
 			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.SHOP);
 		}
-		else if (Shop.SELL_MENU_OPTIONS.contains(menuOption))
+		else if (menuOption.contains("Sell"))
 		{
 			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.INVENTORY);
 		}
