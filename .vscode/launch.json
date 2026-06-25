@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "HaggleHelper Plugin Test",
+            "request": "launch",
+            "mainClass": "com.hagglehelper.HaggleHelperPluginTest",
+            "vmArgs": "-ea",
+            "args": "--developer-mode --debug",
+            "classPaths": [
+                "$Runtime",
+                "$Test"
+            ]
+        }
+    ]
+}
