@@ -28,6 +28,7 @@ public class Shop {
     Map<Integer, Integer> currentStocks;
     boolean isGeneral;
 
+    @SuppressWarnings("null")
     public void updateStock(Item[] items) {
 		log.debug("Updating items={} on shop={}", items, this);
         currentStocks = Arrays.stream(items).collect(Collectors.toMap(Item::getId, Item::getQuantity));
