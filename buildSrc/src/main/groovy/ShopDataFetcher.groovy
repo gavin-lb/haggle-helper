@@ -97,7 +97,7 @@ class ShopDataFetcher {
         while (true) {
             String query = URLEncoder.encode(
                 "bucket('infobox_item')" +
-                ".select('item_id','item_name')" +
+                ".select('item_id','item_name','tradeable','page_name','page_name_sub')" +
                 ".limit(${PAGE_SIZE})" +
                 ".offset(${offset})" +
                 '.run()',
@@ -107,7 +107,7 @@ class ShopDataFetcher {
             List<Map<String, Object>> rows = fetchBucket(query)
 
             rows.each { Map<String, Object> row ->
-                String name = row.item_name as String
+                String name = (row.page_name_sub ?: row.page_name ?: row.item_name) as String
 
                 if (!name) {
                     return
@@ -128,8 +128,12 @@ class ShopDataFetcher {
                     itemId = parseItemId(rawItemId)
                 }
 
-                if (itemId != null) {
-                    itemIdMap[name] = itemId
+                if (itemId != null && row.tradeable != null) {
+                    if (itemIdMap.containsKey(name)) {
+                        println "Duplicate tradable item name: ${name} existingId=${itemIdMap[name]} newId=${itemId}"
+                    } else {
+                        itemIdMap[name] = itemId
+                    }
                 }
             }
 
