@@ -13,9 +13,7 @@ class ShopDataFetcher {
 
     static final String WIKI_BASE = 'https://oldschool.runescape.wiki/api.php?action=bucket&format=json'
     static final String USER_AGENT_FORMAT = 'HaggleHelper/%s (gradle build task)'
-
-    static final int PAGE_SIZE = 500
-    static final int BATCH_SLEEP_MS = 100
+    static final int PAGE_SIZE = 5000
 
     private static String userAgent
 
@@ -84,7 +82,6 @@ class ShopDataFetcher {
             }
 
             offset += PAGE_SIZE
-            Thread.sleep(BATCH_SLEEP_MS)
         }
 
         return allLines
@@ -142,7 +139,6 @@ class ShopDataFetcher {
             }
 
             offset += PAGE_SIZE
-            Thread.sleep(BATCH_SLEEP_MS)
         }
 
         return itemIdMap
