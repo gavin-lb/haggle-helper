@@ -94,7 +94,7 @@ public class HaggleHelperPlugin extends Plugin
 			.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE_TRIMMED, "Magic Guild Store (Mystic Robes)")
 			.put(InventoryID.SKILL_GUIDE_CRAFTING_WEAVING,"Ned's Handmade Rope (100% Wool)")
 			.put(InventoryID.XBOWS_SHOP,"Crossbow Shop (Dwarven Mine)")
-			.put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
+			// .put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
 			.put(InventoryID.XBOWS_SHOP_ADDY,"Crossbow Shop (Keldagrim)")
 			.build();
 
