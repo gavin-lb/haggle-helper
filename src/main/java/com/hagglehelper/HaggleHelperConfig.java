@@ -13,47 +13,51 @@ import net.runelite.client.config.ConfigSection;
 public interface HaggleHelperConfig extends Config
 {
 	String GROUP = "hagglehelper";
+	//#region Overlay box section
+	@ConfigSection(
+		name = "Overlay - Box",
+		description = "Overlay box display settings",
+		position = 8
+	)
+	String boxSection = "boxSection";
+	//#region Number text section
+	@ConfigSection(
+		name = "Overlay - Profitable Amount",
+		description = "Profitable amount text display settings",
+		position = 9
+	)
+	String numberSection = "numberSection";
+	//#region Profit text section
+	@ConfigSection(
+		name = "Overlay - Total Profit",
+		description = "Total potential profit text display settings",
+		position = 10
+	)
+	String profitSection = "profitSection";
+	//#region Current Price section
+	@ConfigSection(
+		name = "Overlay - Current Price",
+		description = "Current price overlay display settings",
+		position = 11
+	)
+	String currentPriceSection = "currentPriceSection";
 
-	enum OverlayMode
-    {
-        NONE,
-        TRACKED,
-        ALL
-    }
-
-	enum InterfaceMode
-	{
-		INVENTORY,
-		SHOP, 
-		BOTH;
-
-		boolean showInventory()
-		{
-			return this == INVENTORY || this == BOTH;
-		}
-
-		boolean showShop()
-		{
-			return this == SHOP || this == BOTH;
-		}
-	}
-	
 	//#region root section
 	@ConfigItem(
 		keyName = "interfaceMode",
 		name = "Interface mode",
-		description = "Which interface(s) the plugin should be enabled for", 
+		description = "Which interface(s) the plugin should be enabled for",
 		position = 0
 	)
 	default InterfaceMode interfaceMode()
 	{
 		return InterfaceMode.BOTH;
-	}	
-	
+	}
+
 	@ConfigItem(
 		keyName = "overlayEnabled",
 		name = "Overlay",
-		description = "Which items overlays should be enabled for (untracked items use their current GE price)", 
+		description = "Which items overlays should be enabled for (untracked items use their current GE price)",
 		position = 1
 	)
 	default OverlayMode overlayEnabled()
@@ -64,7 +68,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "tooltipEnabled",
 		name = "Tooltip",
-		description = "Which items tooltips should be enabled for (untracked items use their current GE price)", 
+		description = "Which items tooltips should be enabled for (untracked items use their current GE price)",
 		position = 2
 	)
 	default OverlayMode tooltipEnabled()
@@ -75,7 +79,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "profitInfoEnabled",
 		name = "Profit info",
-		description = "Whether the profit info panel is enabled", 
+		description = "Whether the profit info panel is enabled",
 		position = 3
 	)
 	default boolean profitInfoEnabled()
@@ -86,7 +90,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "autoCost",
 		name = "Auto cost from GE",
-		description = "Automatically populate cost with the Grand Exchange price when adding an item", 
+		description = "Automatically populate cost with the Grand Exchange price when adding an item",
 		position = 4
 	)
 	default boolean autoCost()
@@ -94,10 +98,10 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
-    @ConfigItem(
+	@ConfigItem(
 		keyName = "profitThreshold",
 		name = "Profit threshold",
-		description = "The per-item profit margin threshold, in gp, that an item must be exceed to be considered profitable", 
+		description = "The per-item profit margin threshold, in gp, that an item must be exceed to be considered profitable",
 		position = 5
 	)
 	default int profitThreshold()
@@ -108,7 +112,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "blockUnprofitable",
 		name = "Block unprofitable",
-		description = "Which items to block any unprofitable transactions for (untracked items use their current GE price)", 
+		description = "Which items to block any unprofitable transactions for (untracked items use their current GE price)",
 		position = 6
 	)
 	default OverlayMode blockUnprofitable()
@@ -120,7 +124,7 @@ public interface HaggleHelperConfig extends Config
 		keyName = "bulkLossAllowance",
 		name = "Bulk loss allowance",
 		description = "The allowed profit loss, in gp, before a bulk transaction is blocked (eg. if less than 10 items"
-		+ " are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)", 
+			+ " are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)",
 		position = 7
 	)
 	default int bulkLossAllowance()
@@ -128,14 +132,6 @@ public interface HaggleHelperConfig extends Config
 		return 50;
 	}
 
-	//#region Overlay box section
-	@ConfigSection(
-        name = "Overlay - Box",
-        description = "Overlay box display settings",
-		position = 8
-    )
-    String boxSection = "boxSection";
-	
 	@ConfigItem(
 		keyName = "boxOffset",
 		name = "Offset",
@@ -235,14 +231,6 @@ public interface HaggleHelperConfig extends Config
 	{
 		return new Color(255, 0, 0, 80);
 	}
-	
-	//#region Number text section
-	@ConfigSection(
-        name = "Overlay - Profitable Amount",
-        description = "Profitable amount text display settings", 
-		position = 9
-    )
-    String numberSection = "numberSection";
 
 	@ConfigItem(
 		keyName = "showNumber",
@@ -267,7 +255,7 @@ public interface HaggleHelperConfig extends Config
 	{
 		return new Dimension(2, 34);
 	}
-	
+
 	@ConfigItem(
 		keyName = "numberColor",
 		name = "Color",
@@ -279,14 +267,6 @@ public interface HaggleHelperConfig extends Config
 	{
 		return Color.WHITE;
 	}
-	
-	//#region Profit text section
-	@ConfigSection(
-        name = "Overlay - Total Profit",
-        description = "Total potential profit text display settings",
-		position = 10
-    )
-    String profitSection = "profitSection";
 
 	@ConfigItem(
 		keyName = "showProfit",
@@ -336,14 +316,6 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
-	//#region Current Price section
-	@ConfigSection(
-        name = "Overlay - Current Price",
-        description = "Current price overlay display settings",
-		position = 11
-    )
-    String currentPriceSection = "currentPriceSection";
-
 	@ConfigItem(
 		keyName = "showCurrentPrice",
 		name = "Show",
@@ -379,7 +351,7 @@ public interface HaggleHelperConfig extends Config
 	{
 		return Color.YELLOW;
 	}
-	
+
 	@ConfigItem(
 		keyName = "shortenCurrentPrice",
 		name = "Abbreviate",
@@ -394,21 +366,45 @@ public interface HaggleHelperConfig extends Config
 
 	//#region Internal
 	@ConfigItem(
-            keyName = "itemPricesJson",
-            name = "Item prices (JSON)",
-            description = "Internal storage",
-            hidden = true
-    )
-    default String itemCostsJson()
-    {
-        return "{}";
-    }
+		keyName = "itemPricesJson",
+		name = "Item prices (JSON)",
+		description = "Internal storage",
+		hidden = true
+	)
+	default String itemCostsJson()
+	{
+		return "{}";
+	}
 
-    @ConfigItem(
-            keyName = "itemPricesJson",
-            name = "Item prices (JSON)",
-            description = "Internal storage",
-            hidden = true
-    )
-    void setItemCostsJson(String json);
+	@ConfigItem(
+		keyName = "itemPricesJson",
+		name = "Item prices (JSON)",
+		description = "Internal storage",
+		hidden = true
+	)
+	void setItemCostsJson(String json);
+
+	enum OverlayMode
+	{
+		NONE,
+		TRACKED,
+		ALL
+	}
+
+	enum InterfaceMode
+	{
+		INVENTORY,
+		SHOP,
+		BOTH;
+
+		boolean showInventory()
+		{
+			return this == INVENTORY || this == BOTH;
+		}
+
+		boolean showShop()
+		{
+			return this == SHOP || this == BOTH;
+		}
+	}
 }

@@ -1,6 +1,8 @@
 # Haggle Helper
 
-Helps you haggle with NPC shops to maximize profit. Simply add your items with their costs to the side panel and whenever you open a shop instantly see how many items can be sold profitably and for how much profit, automatically accounting for price drops.
+Helps you haggle with NPC shops to maximize profit. Simply add your items with their costs to the side panel and
+whenever you open a shop instantly see how many items can be sold profitably and for how much profit, automatically
+accounting for price drops.
 
 ## Features
 
@@ -15,4 +17,5 @@ Haggle Helper can:
 - Block unprofitable transactions with configurable allowance for bulk transactions
 - Fully customizable colors, text displays, and overlay positioning
 
-Perfect for players who regularly use general stores, specialty shops, or other NPC vendors and want to maximize their profits.
+Perfect for players who regularly use general stores, specialty shops, or other NPC vendors and want to maximize their
+profits.

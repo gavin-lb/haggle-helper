@@ -1,14 +1,14 @@
 {
-    "extends": "recommended",
-    "rules": {
-        "DuplicateNumberLiteral": {
-            "enabled": false
-        },
-        "DuplicateStringLiteral": {
-            "enabled": false
-        },
-        "NoDouble": {
-            "enabled": false
-        }
+  "extends": "recommended",
+  "rules": {
+    "DuplicateNumberLiteral": {
+      "enabled": false
+    },
+    "DuplicateStringLiteral": {
+      "enabled": false
+    },
+    "NoDouble": {
+      "enabled": false
     }
+  }
 }

@@ -1,8 +1,8 @@
+import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.transform.CompileStatic
 
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Matcher
-import com.fasterxml.jackson.databind.ObjectMapper
 
 /**
  * Fetches shop and item stock data from the Old School RuneScape Wiki bucket API
@@ -15,24 +15,24 @@ class ShopDataFetcher {
     static final String USER_AGENT_FORMAT = 'HaggleHelper/%s (gradle build task)'
     static final int PAGE_SIZE = 5000
     static final Map<String, Set<String>> EXPECTED_DUPLICATE_SHOPS = [
-        'Magic Guild Store': [
-            'Magic Guild Store (Runes and Staves)',
-            'Magic Guild Store (Mystic Robes)'
-        ] as Set<String>,
-        'Crossbow Shop': [
-            'Crossbow Shop (White Wolf Mountain)',
-            'Crossbow Shop (Dwarven Mine)',
-            'Crossbow Shop (Keldagrim)'
-        ] as Set<String>,
-        'Ratpit Bar': [
-            'Ratpit bar (Port Sarim)',
-            'Ratpit bar (Keldagrim)',
-            'Ratpit bar (Varrock)'
-        ] as Set<String>,
-        'Bounty Hunter Shop': [
-            'Bounty Hunter Shop (Deadman Mode)',
-            'Bounty Hunter Shop (historical)'
-        ] as Set<String>
+            'Magic Guild Store' : [
+                    'Magic Guild Store (Runes and Staves)',
+                    'Magic Guild Store (Mystic Robes)'
+            ] as Set<String>,
+            'Crossbow Shop'     : [
+                    'Crossbow Shop (White Wolf Mountain)',
+                    'Crossbow Shop (Dwarven Mine)',
+                    'Crossbow Shop (Keldagrim)'
+            ] as Set<String>,
+            'Ratpit Bar'        : [
+                    'Ratpit bar (Port Sarim)',
+                    'Ratpit bar (Keldagrim)',
+                    'Ratpit bar (Varrock)'
+            ] as Set<String>,
+            'Bounty Hunter Shop': [
+                    'Bounty Hunter Shop (Deadman Mode)',
+                    'Bounty Hunter Shop (historical)'
+            ] as Set<String>
     ]
 
     private static String userAgent
@@ -81,23 +81,23 @@ class ShopDataFetcher {
 
         while (true) {
             String query = URLEncoder.encode(
-                "bucket('storeline')" +
-                '.select(' +
-                "'sold_by'," +
-                "'sold_item'," +
-                "'store_stock'," +
-                "'store_currency'," +
-                "'store_sell_multiplier'," +
-                "'store_buy_multiplier'," +
-                "'store_delta'" +
-                ')' +
-                ".where('store_currency','=','Coins')" +
-                ".where('store_stock','>=','0')" +
-                ".where('store_stock','!=','N/A')" +
-                ".limit(${PAGE_SIZE})" +
-                ".offset(${offset})" +
-                '.run()',
-                'UTF-8'
+                    "bucket('storeline')" +
+                            '.select(' +
+                            "'sold_by'," +
+                            "'sold_item'," +
+                            "'store_stock'," +
+                            "'store_currency'," +
+                            "'store_sell_multiplier'," +
+                            "'store_buy_multiplier'," +
+                            "'store_delta'" +
+                            ')' +
+                            ".where('store_currency','=','Coins')" +
+                            ".where('store_stock','>=','0')" +
+                            ".where('store_stock','!=','N/A')" +
+                            ".limit(${PAGE_SIZE})" +
+                            ".offset(${offset})" +
+                            '.run()',
+                    'UTF-8'
             )
 
             List<Map<String, Object>> rows = fetchBucket(query)
@@ -123,59 +123,60 @@ class ShopDataFetcher {
 
         while (true) {
             String query = URLEncoder.encode(
-                "bucket('infobox_shop')" +
-                ".select('shop_name', 'page_name')" +
-                ".where('shop_name','!=','page_name')" +
-                ".limit(${PAGE_SIZE})" +
-                ".offset(${offset})" +
-                '.run()',
-                'UTF-8'
+                    "bucket('infobox_shop')" +
+                            ".select('shop_name', 'page_name')" +
+                            ".where('shop_name','!=','page_name')" +
+                            ".limit(${PAGE_SIZE})" +
+                            ".offset(${offset})" +
+                            '.run()',
+                    'UTF-8'
             )
 
             List<Map<String, Object>> rows = fetchBucket(query)
 
             rows.each {
-                Map<String, Object> row -> {
-                    String shop = row.shop_name
-                    String page = row.page_name
+                Map<String, Object> row ->
+                    {
+                        String shop = row.shop_name
+                        String page = row.page_name
 
-                    if (shop == null || page == null) {
-                        println "Null name: page_name='${page}', shop_name='${shop}'"
-                        return
+                        if (shop == null || page == null) {
+                            println "Null name: page_name='${page}', shop_name='${shop}'"
+                            return
+                        }
+
+                        if (shop == page) {
+                            return
+                        }
+
+                        if (shopMap.containsKey(page)) {
+                            return
+                        }
+
+                        if (EXPECTED_DUPLICATE_SHOPS.containsKey(shop) && EXPECTED_DUPLICATE_SHOPS[shop].contains(page)) {
+                            return
+                        }
+
+                        if (dupeMap.containsKey(shop)) {
+                            println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
+                            dupeMap[shop].add(page)
+                            return
+                        }
+
+                        if (pageMap.containsKey(shop)) {
+                            println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
+                            println "UNEXPECTED DUPLICATE - '${shop}': '${pageMap[shop]}'"
+                            dupeMap[shop] = [] as Set<String>
+                            dupeMap[shop].add(page)
+                            String oldPage = pageMap.remove(shop)
+                            dupeMap[shop].add(oldPage)
+                            shopMap.remove(oldPage)
+                            return
+                        }
+
+                        shopMap[page] = shop
+                        pageMap[shop] = page
                     }
-
-                    if (shop == page) {
-                        return
-                    }
-
-                    if (shopMap.containsKey(page)) {
-                        return
-                    }
-
-                    if (EXPECTED_DUPLICATE_SHOPS.containsKey(shop) && EXPECTED_DUPLICATE_SHOPS[shop].contains(page)) {
-                        return
-                    }
-
-                    if (dupeMap.containsKey(shop)) {
-                        println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
-                        dupeMap[shop].add(page)
-                        return
-                    }
-
-                    if (pageMap.containsKey(shop)) {
-                        println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
-                        println "UNEXPECTED DUPLICATE - '${shop}': '${pageMap[shop]}'"
-                        dupeMap[shop] = [] as Set<String>
-                        dupeMap[shop].add(page)
-                        String oldPage = pageMap.remove(shop)
-                        dupeMap[shop].add(oldPage)
-                        shopMap.remove(oldPage)
-                        return
-                    }
-
-                    shopMap[page] = shop
-                    pageMap[shop] = page
-                }
             }
 
             if (rows.size() < PAGE_SIZE) {
@@ -192,9 +193,9 @@ class ShopDataFetcher {
     }
 
     private static Set<String> fetchGeneralStores() {
-        String text = new URL(
-            'https://oldschool.runescape.wiki/w/General_store?action=raw'
-        ).getText('UTF-8')
+        String text = URI.create(
+                'https://oldschool.runescape.wiki/w/General_store?action=raw'
+        ).toURL().getText('UTF-8')
 
         Set<String> stores = [] as Set<String>
 
@@ -231,12 +232,12 @@ class ShopDataFetcher {
 
         while (true) {
             String query = URLEncoder.encode(
-                "bucket('infobox_item')" +
-                ".select('item_id','item_name','page_name','page_name_sub')" +
-                ".limit(${PAGE_SIZE})" +
-                ".offset(${offset})" +
-                '.run()',
-                'UTF-8'
+                    "bucket('infobox_item')" +
+                            ".select('item_id','item_name','page_name','page_name_sub')" +
+                            ".limit(${PAGE_SIZE})" +
+                            ".offset(${offset})" +
+                            '.run()',
+                    'UTF-8'
             )
 
             List<Map<String, Object>> rows = fetchBucket(query)
@@ -258,8 +259,7 @@ class ShopDataFetcher {
                     if (!itemIds.empty) {
                         itemId = parseItemId(itemIds[0])
                     }
-                }
-                else {
+                } else {
                     itemId = parseItemId(rawItemId)
                 }
 
@@ -279,10 +279,10 @@ class ShopDataFetcher {
     }
 
     private static Map<String, Object> makeShopMap(
-        List<Map<String, Object>> allLines,
-        Map<String, Integer> itemIdMap,
-        Set<String> generalStores,
-        Map<String, String> shopMap
+            List<Map<String, Object>> allLines,
+            Map<String, Integer> itemIdMap,
+            Set<String> generalStores,
+            Map<String, String> shopMap
     ) {
 
         Map<String, Object> shops = [:]
@@ -310,19 +310,16 @@ class ShopDataFetcher {
             }
             catch (NumberFormatException ignored) {
                 // Skip malformed stock values.
-            }
-
-            if (stock == null) {
                 return
             }
 
             shops.computeIfAbsent(shopName) {
                 [
-                    buysAt: parsePercent(line.store_buy_multiplier, 70),
-                    sellsAt: parsePercent(line.store_sell_multiplier, 100),
-                    changePer: parseDelta(line.store_delta, 3.0d),
-                    isGeneral: generalStores.contains(pageName),
-                    defaultStocks: [:]
+                        buysAt       : parsePercent(line.store_buy_multiplier, 70),
+                        sellsAt      : parsePercent(line.store_sell_multiplier, 100),
+                        changePer    : parseDelta(line.store_delta, 3.0d),
+                        isGeneral    : generalStores.contains(pageName),
+                        defaultStocks: [:]
                 ]
             }
 
@@ -333,9 +330,9 @@ class ShopDataFetcher {
     }
 
     private static List<Map<String, Object>> fetchBucket(String encodedQuery) {
-        String url = "${WIKI_BASE}&query=${encodedQuery}"
-
-        URLConnection conn = new URL(url).openConnection()
+        URLConnection conn = URI.create("${WIKI_BASE}&query=${encodedQuery}")
+                .toURL()
+                .openConnection()
 
         conn.connectTimeout = 10_000
         conn.readTimeout = 30_000
@@ -347,7 +344,7 @@ class ShopDataFetcher {
 
         if (response.error) {
             throw new IllegalStateException(
-                "Wiki API error: ${response.error} for query ${encodedQuery}"
+                    "Wiki API error: ${response.error} for query ${encodedQuery}"
             )
         }
 

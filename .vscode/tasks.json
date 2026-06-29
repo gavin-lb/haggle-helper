@@ -16,7 +16,7 @@
       "detail": "Runs the Gradle task to build a Shadow JAR",
       "type": "shell",
       "command": "./gradlew shadowJar",
-      "hide": true,
+      "hide": true
     },
     {
       "label": "Build & Run Shadow JAR (Windows JVM)",

@@ -1,342 +1,348 @@
 package com.hagglehelper;
 
+import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
-
-import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
-
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Item;
 
 @Slf4j
-public class Shop {
-    public final int SELL_TO_FLOOR = 10;
-    public final int BUY_FROM_FLOOR = 30;
-    
-    @Inject
-    private HaggleHelperConfig config;
+public class Shop
+{
+	public final int SELL_TO_FLOOR = 10;
+	public final int BUY_FROM_FLOOR = 30;
+	public final Map<Integer, Integer> queue = new HashMap<>();
 
-    String name;
-    int sellsAt;
-    int buysAt;
-    float changePer;
-    Map<Integer, Integer> defaultStocks;
-    Map<Integer, Integer> currentStocks;
-    boolean isGeneral;
-    
-    public final Map<Integer, Integer> queue = new HashMap<>();
+	String name;
+	int sellsAt;
+	int buysAt;
+	float changePer;
+	Map<Integer, Integer> defaultStocks;
+	Map<Integer, Integer> currentStocks;
+	boolean isGeneral;
 
-    public int getStock(int itemId)
-    {
-        return currentStocks != null
-            ? currentStocks.getOrDefault(itemId, 0) + queue.getOrDefault(itemId, 0)
-            : 0;
-    }
+	@Inject
+	private HaggleHelperConfig config;
 
-    public int getStock(HighlightedItem item)
-    {
-        return getStock(item.id);
-    }
+	public int getStock(int itemId)
+	{
+		return currentStocks != null
+			? currentStocks.getOrDefault(itemId, 0) + queue.getOrDefault(itemId, 0)
+			: 0;
+	}
 
-    @SuppressWarnings("null")
-    public boolean updateStock(Item[] items) {
+	public int getStock(HighlightedItem item)
+	{
+		return getStock(item.id);
+	}
+
+	@SuppressWarnings("null")
+	public boolean updateStock(Item[] items)
+	{
 		log.debug("Updating items={} on shop={}", items, this);
-        Map<Integer, Integer> newStocks = Arrays.stream(items)
-            .filter(item -> item.getId() > 0)
-            .collect(Collectors.toMap(Item::getId, Item::getQuantity));
+		Map<Integer, Integer> newStocks = Arrays.stream(items)
+			.filter(item -> item.getId() > 0)
+			.collect(Collectors.toMap(Item::getId, Item::getQuantity));
 
-        if (newStocks.equals(currentStocks))
-        {
-            log.debug("Stock unchanged");
-            return false;
-        }
+		if (newStocks.equals(currentStocks))
+		{
+			log.debug("Stock unchanged");
+			return false;
+		}
 
-        if (currentStocks != null && !queue.isEmpty())
-        {
-            for (Item item : items)
-            {
-                int itemId = item.getId();
-                int queued = queue.getOrDefault(itemId, 0);
-                if (queued != 0)
-                {
-                    int previousStock = currentStocks.getOrDefault(itemId, 0);
-                    int newStock = newStocks.get(itemId);
-                    log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
-                    
-                    int newQueued = queued - newStock + previousStock;
-                    if (newQueued != 0)
-                    {
-                        queue.put(itemId, newQueued);
-                        log.debug("newQueued={}", newQueued);
-                    }
-                    else
-                    {
-                        queue.remove(itemId);
-                        log.debug("removed queued");
-                    }
-                }
-            }
-        }
-        
-        currentStocks = newStocks;
-        return true;
-    }
+		if (currentStocks != null && !queue.isEmpty())
+		{
+			for (Item item : items)
+			{
+				int itemId = item.getId();
+				int queued = queue.getOrDefault(itemId, 0);
+				if (queued != 0)
+				{
+					int previousStock = currentStocks.getOrDefault(itemId, 0);
+					int newStock = newStocks.get(itemId);
+					log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
 
-    public int getStockDelta(int itemId)
-    {
-        int defaultStock = defaultStocks.getOrDefault(itemId, 0);
-        int currentStock = getStock(itemId);
-        return defaultStock - currentStock;
-    }
+					int newQueued = queued - newStock + previousStock;
+					if (newQueued != 0)
+					{
+						queue.put(itemId, newQueued);
+						log.debug("newQueued={}", newQueued);
+					}
+					else
+					{
+						queue.remove(itemId);
+						log.debug("removed queued");
+					}
+				}
+			}
+		}
 
-    public int getStockDelta(HighlightedItem item) 
-    {   
-        return getStockDelta(item.id);
-    }
-    
-    private int getItemPrice(int itemId, int itemValue, int multiplier) 
-    { 
-        int delta = getStockDelta(itemId);
-        return (int) Math.floor(itemValue * (multiplier + delta*changePer) / 100);
-    }
-    
-    public int getItemPrice(HighlightedItem item) 
-    {
-        return item.mode == InterfaceMode.INVENTORY
-            ? getItemPriceSellTo(item.id, item.value)
-            : getItemPriceBuyFrom(item.id, item.value);
-    }
+		currentStocks = newStocks;
+		return true;
+	}
 
-    public int getItemPriceSellTo(HighlightedItem item) 
-    {
-        return getItemPriceSellTo(item.id, item.value);
-    }
+	public int getStockDelta(int itemId)
+	{
+		int defaultStock = defaultStocks.getOrDefault(itemId, 0);
+		int currentStock = getStock(itemId);
+		return defaultStock - currentStock;
+	}
 
-    public int getItemPriceSellTo(int itemId, int itemValue) 
-    {
-        return Math.max(getItemPrice(itemId, itemValue, buysAt), SELL_TO_FLOOR);
-    }
+	public int getStockDelta(HighlightedItem item)
+	{
+		return getStockDelta(item.id);
+	}
 
-    public int getItemPriceBuyFrom(HighlightedItem item) 
-    {
-        return getItemPriceBuyFrom(item.id, item.value);
-    }
+	private int getItemPrice(int itemId, int itemValue, int multiplier)
+	{
+		int delta = getStockDelta(itemId);
+		return (int) Math.floor(itemValue * (multiplier + delta * changePer) / 100);
+	}
 
-    public int getItemPriceBuyFrom(int itemId, int itemValue) 
-    {
-        return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR);
-    }
+	public int getItemPrice(HighlightedItem item)
+	{
+		return item.mode == InterfaceMode.INVENTORY
+			? getItemPriceSellTo(item.id, item.value)
+			: getItemPriceBuyFrom(item.id, item.value);
+	}
 
-    public int getNumProfitableSellTo(int itemId, int cost, int itemValue) 
-    {
-        float percent = 100f * (cost + config.profitThreshold()) / itemValue;
-        float num = (buysAt - percent) / changePer;
-        return Math.max(0, (int) Math.ceil(num) + getStockDelta(itemId));
-    }
+	public int getItemPriceSellTo(HighlightedItem item)
+	{
+		return getItemPriceSellTo(item.id, item.value);
+	}
 
-    public int getNumProfitableSellTo(HighlightedItem item) 
-    {
-        return getNumProfitableSellTo(item.id, item.cost, item.value);
-    }
+	public int getItemPriceSellTo(int itemId, int itemValue)
+	{
+		return Math.max(getItemPrice(itemId, itemValue, buysAt), SELL_TO_FLOOR);
+	}
 
-    public int getNumProfitableBuyFrom(int itemId, int cost, int itemValue) 
-    {
-        float percent = 100f * (cost - config.profitThreshold()) / itemValue;
-        float num = (percent - sellsAt) / changePer;
-        int adjustedNum = Math.max(0, (int) Math.ceil(num) - getStockDelta(itemId));
-        return Math.min(getStock(itemId), adjustedNum);
-    }
+	public int getItemPriceBuyFrom(HighlightedItem item)
+	{
+		return getItemPriceBuyFrom(item.id, item.value);
+	}
 
-    public int getNumProfitableBuyFrom(HighlightedItem item) 
-    {
-        return getNumProfitableBuyFrom(item.id, item.cost, item.value);
-    }
+	public int getItemPriceBuyFrom(int itemId, int itemValue)
+	{
+		return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR);
+	}
 
-    public int getTotalProfitSellTo(int itemId, int cost, int itemValue) 
-    {
-        int num = getNumProfitableSellTo(itemId, cost, itemValue);
-        return getProfitSellTo(num, itemId, cost, itemValue);
-    }
+	public int getNumProfitableSellTo(int itemId, int cost, int itemValue)
+	{
+		float percent = 100f * (cost + config.profitThreshold()) / itemValue;
+		float num = (buysAt - percent) / changePer;
+		return Math.max(0, (int) Math.ceil(num) + getStockDelta(itemId));
+	}
 
-    public int getTotalProfitSellTo(HighlightedItem item) 
-    {
-        return getTotalProfitSellTo(item.id, item.cost, item.value);
-    }
+	public int getNumProfitableSellTo(HighlightedItem item)
+	{
+		return getNumProfitableSellTo(item.id, item.cost, item.value);
+	}
 
-    public int getTotalProfitBuyFrom(int itemId, int cost, int itemValue) 
-    {
-        int num = getNumProfitableBuyFrom(itemId, cost, itemValue);
-        return getProfitBuyFrom(num, itemId, cost, itemValue);
-    }
+	public int getNumProfitableBuyFrom(int itemId, int cost, int itemValue)
+	{
+		float percent = 100f * (cost - config.profitThreshold()) / itemValue;
+		float num = (percent - sellsAt) / changePer;
+		int adjustedNum = Math.max(0, (int) Math.ceil(num) - getStockDelta(itemId));
+		return Math.min(getStock(itemId), adjustedNum);
+	}
 
-    public int getTotalProfitBuyFrom(HighlightedItem item) 
-    {
-        return getTotalProfitBuyFrom(item.id, item.cost, item.value);
-    }
-    
-    public int getRevenueBuyFrom(int quantity, HighlightedItem item) 
-    {
-        return getRevenueBuyFrom(quantity, item.id, item.value);
-    }
+	public int getNumProfitableBuyFrom(HighlightedItem item)
+	{
+		return getNumProfitableBuyFrom(item.id, item.cost, item.value);
+	}
 
-    public int getRevenueBuyFrom(int quantity, int itemId, int itemValue) 
-    {
-        if (quantity <= 0) 
-        {
-            return 0;
-        }
+	public int getTotalProfitSellTo(int itemId, int cost, int itemValue)
+	{
+		int num = getNumProfitableSellTo(itemId, cost, itemValue);
+		return getProfitSellTo(num, itemId, cost, itemValue);
+	}
 
-        float pricePercent = sellsAt + changePer * getStockDelta(itemId);
-        int revenue = 0;
-        for (int i = 0; i < quantity; i++, pricePercent += changePer) {
-            revenue += (int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100);
-        }
+	public int getTotalProfitSellTo(HighlightedItem item)
+	{
+		return getTotalProfitSellTo(item.id, item.cost, item.value);
+	}
 
-        return revenue;
-    }
+	public int getTotalProfitBuyFrom(int itemId, int cost, int itemValue)
+	{
+		int num = getNumProfitableBuyFrom(itemId, cost, itemValue);
+		return getProfitBuyFrom(num, itemId, cost, itemValue);
+	}
 
-    public int getRevenueSellTo(int quantity, HighlightedItem item) 
-    {
-        return getRevenueSellTo(quantity, item.id, item.value);
-    }
+	public int getTotalProfitBuyFrom(HighlightedItem item)
+	{
+		return getTotalProfitBuyFrom(item.id, item.cost, item.value);
+	}
 
-    private int getRevenueSellTo(int quantity, int itemId, int itemValue) 
-    {
-        if (quantity <= 0) 
-        {
-            return 0;
-        }
+	public int getRevenueBuyFrom(int quantity, HighlightedItem item)
+	{
+		return getRevenueBuyFrom(quantity, item.id, item.value);
+	}
 
-        float pricePercent = buysAt + changePer * getStockDelta(itemId);
-        int revenue = 0;
-        for (int i = 0; i < quantity; i++, pricePercent -= changePer) {
-            revenue += (int) Math.floor(Math.max(pricePercent, SELL_TO_FLOOR) * itemValue / 100);
-        }
+	public int getRevenueBuyFrom(int quantity, int itemId, int itemValue)
+	{
+		if (quantity <= 0)
+		{
+			return 0;
+		}
 
-        return revenue;
-    }
+		float pricePercent = sellsAt + changePer * getStockDelta(itemId);
+		int revenue = 0;
+		for (int i = 0; i < quantity; i++, pricePercent += changePer)
+		{
+			revenue += (int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100);
+		}
 
-    public int getProfitSellTo(int quantity, HighlightedItem item) 
-    {
-        return getProfitSellTo(quantity, item.id, item.cost, item.value);
-    }
+		return revenue;
+	}
 
-    public int getProfitSellTo(int quantity, int itemId, int cost, int itemValue) 
-    {
-        return quantity > 0 
-            ? getRevenueSellTo(quantity, itemId, itemValue) - cost * quantity
-            : 0;
-    }
-    
-    public int getProfitBuyFrom(int quantity, HighlightedItem item) 
-    {
-        return getProfitBuyFrom(quantity, item.id, item.cost, item.value);
-    }
+	public int getRevenueSellTo(int quantity, HighlightedItem item)
+	{
+		return getRevenueSellTo(quantity, item.id, item.value);
+	}
 
-    public int getProfitBuyFrom(int quantity, int itemId, int cost, int itemValue) 
-    {
-        return quantity > 0 
-            ? cost * quantity - getRevenueBuyFrom(quantity, itemId, itemValue)
-            : 0;
-    }
+	private int getRevenueSellTo(int quantity, int itemId, int itemValue)
+	{
+		if (quantity <= 0)
+		{
+			return 0;
+		}
 
-    public Color getColorSellTo(HighlightedItem item)
-    {
-        return getColor(
-            getProfitSellTo(1, item),
-            getProfitSellTo(5, item),
-            getProfitSellTo(10, item),
-            getNumProfitableSellTo(item),
-            getTotalProfitSellTo(item)
-        );
-    }
+		float pricePercent = buysAt + changePer * getStockDelta(itemId);
+		int revenue = 0;
+		for (int i = 0; i < quantity; i++, pricePercent -= changePer)
+		{
+			revenue += (int) Math.floor(Math.max(pricePercent, SELL_TO_FLOOR) * itemValue / 100);
+		}
 
-    public Color getColorBuyFrom(HighlightedItem item) 
-    {
-        return getColor(
-            getProfitBuyFrom(1, item),
-            getProfitBuyFrom(5, item),
-            getProfitBuyFrom(10, item),
-            getNumProfitableBuyFrom(item),
-            getTotalProfitBuyFrom(item)
-        );
-    }
+		return revenue;
+	}
 
-    private Color getColor(int profit1, int profit5, int profit10, int numProfitable, int maxProfit)
-    {
-        int profitThreshold = config.profitThreshold();
-        int bulkLossAllowance = config.bulkLossAllowance();
+	public int getProfitSellTo(int quantity, HighlightedItem item)
+	{
+		return getProfitSellTo(quantity, item.id, item.cost, item.value);
+	}
 
-        if (maxProfit <= profitThreshold)
-        {
-            return config.unprofitableColor();
-        }
-        else if (profit10 > 10*profitThreshold && profit10 > Math.max(profit5, profit1) && (numProfitable >= 10 || maxProfit - profit10 < bulkLossAllowance))
-        {
-            return config.tenProfitableColor();
-        }
-        else if (profit5 > 5*profitThreshold && profit5 > profit1 && (numProfitable >= 5 || maxProfit - profit5 < bulkLossAllowance))
-        {
-            return config.fiveProfitableColor();
-        }
-        else
-        {
-            return config.oneProfitableColor();
-        }
-    }
+	public int getProfitSellTo(int quantity, int itemId, int cost, int itemValue)
+	{
+		return quantity > 0
+			? getRevenueSellTo(quantity, itemId, itemValue) - cost * quantity
+			: 0;
+	}
 
-    public boolean isTradableWith(int itemId) {
-        return isGeneral || defaultStocks.containsKey(itemId) || currentStocks.containsKey(itemId);
-    }
+	public int getProfitBuyFrom(int quantity, HighlightedItem item)
+	{
+		return getProfitBuyFrom(quantity, item.id, item.cost, item.value);
+	}
 
-    public boolean isTradableWith(HighlightedItem item) {
-        return isTradableWith(item.id);
-    }
-        
-    public Integer processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException {
-        if (!isTradableWith(item))
-        {
-            return null;
-        }
-        
-        final int amount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
+	public int getProfitBuyFrom(int quantity, int itemId, int cost, int itemValue)
+	{
+		return quantity > 0
+			? cost * quantity - getRevenueBuyFrom(quantity, itemId, itemValue)
+			: 0;
+	}
+
+	public Color getColorSellTo(HighlightedItem item)
+	{
+		return getColor(
+			getProfitSellTo(1, item),
+			getProfitSellTo(5, item),
+			getProfitSellTo(10, item),
+			getNumProfitableSellTo(item),
+			getTotalProfitSellTo(item)
+		);
+	}
+
+	public Color getColorBuyFrom(HighlightedItem item)
+	{
+		return getColor(
+			getProfitBuyFrom(1, item),
+			getProfitBuyFrom(5, item),
+			getProfitBuyFrom(10, item),
+			getNumProfitableBuyFrom(item),
+			getTotalProfitBuyFrom(item)
+		);
+	}
+
+	private Color getColor(int profit1, int profit5, int profit10, int numProfitable, int maxProfit)
+	{
+		int profitThreshold = config.profitThreshold();
+		int bulkLossAllowance = config.bulkLossAllowance();
+
+		if (maxProfit <= profitThreshold)
+		{
+			return config.unprofitableColor();
+		}
+		else if (profit10 > 10 * profitThreshold && profit10 > Math.max(profit5, profit1) && (numProfitable >= 10 || maxProfit - profit10 < bulkLossAllowance))
+		{
+			return config.tenProfitableColor();
+		}
+		else if (profit5 > 5 * profitThreshold && profit5 > profit1 && (numProfitable >= 5 || maxProfit - profit5 < bulkLossAllowance))
+		{
+			return config.fiveProfitableColor();
+		}
+		else
+		{
+			return config.oneProfitableColor();
+		}
+	}
+
+	public boolean isTradableWith(int itemId)
+	{
+		return isGeneral || defaultStocks.containsKey(itemId) || currentStocks.containsKey(itemId);
+	}
+
+	public boolean isTradableWith(HighlightedItem item)
+	{
+		return isTradableWith(item.id);
+	}
+
+	public Integer processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException
+	{
+		if (!isTradableWith(item))
+		{
+			return null;
+		}
+
+		final int amount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
 		int profit = item.mode == InterfaceMode.INVENTORY
-            ? getProfitSellTo(amount, item) 
-            : getProfitBuyFrom(amount, item);
+			? getProfitSellTo(amount, item)
+			: getProfitBuyFrom(amount, item);
 		int profitDelta = item.maxProfit - profit;
 
-        int queued = queue.getOrDefault(item.id, 0);
-		if (queued != 0) 
+		int queued = queue.getOrDefault(item.id, 0);
+		if (queued != 0)
 		{
 			log.debug("Transaction while queued, queued={} amount={} item={}", queued, amount, item);
 		}
-		
-		if (profit > amount*config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance())) 
+
+		if (profit > amount * config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance()))
 		{
 			log.debug("Allowing profitable transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
-            queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
-            item.numProfitable -= amount;
-            item.maxProfit -= profit;
-            item.currentPrice = getItemPrice(item);
+			queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
+			item.numProfitable -= amount;
+			item.maxProfit -= profit;
+			item.currentPrice = getItemPrice(item);
 			return profit;
 		}
 
-        log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
-        throw new UnprofitableTransactionException();
-    }
+		log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+		throw new UnprofitableTransactionException();
+	}
 
-    @Override
-    public String toString() {
-        return String.format(
-            "Shop{name=%s, sellsAt=%d, buysAt=%d, changePer=%f, defaultStocks=%s, currentStocks=%s, general=%s, queue=%s}", 
-            name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral, queue
-        );
-    }
+	@Override
+	public String toString()
+	{
+		return String.format(
+			"Shop{name=%s, sellsAt=%d, buysAt=%d, changePer=%f, defaultStocks=%s, currentStocks=%s, general=%s, queue=%s}",
+			name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral, queue
+		);
+	}
 
-    public class UnprofitableTransactionException extends Exception {}
+	public static class UnprofitableTransactionException extends Exception
+	{
+	}
 }

@@ -1,73 +1,71 @@
 package com.hagglehelper;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Singleton;
-
 import com.google.inject.Inject;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
-
+import java.util.HashMap;
+import java.util.Map;
+import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.game.ItemManager;
 
 @Slf4j
 @Singleton
-public class HighlightedItemsManager {
-    @Inject
-    private HaggleHelperPlugin plugin;
+public class HighlightedItemsManager
+{
+	private final Map<Integer, HighlightedItem> inventoryItems = new HashMap<>();
+	private final Map<Integer, HighlightedItem> shopItems = new HashMap<>();
 
-    @Inject
-    private TrackedItemsManager trackedItemsManager;
+	@Inject
+	private HaggleHelperPlugin plugin;
 
-    @Inject
-    private ItemManager itemManager;
+	@Inject
+	private TrackedItemsManager trackedItemsManager;
 
-    private final Map<Integer, HighlightedItem> inventoryItems = new HashMap<>();
-    private final Map<Integer, HighlightedItem> shopItems = new HashMap<>();
-    
-    private HighlightedItem buildItem(int itemId)
-    {
-        return trackedItemsManager.isTrackedItemId(itemId) 
-            ? new HighlightedItem(trackedItemsManager.getTrackedItem(itemId))
-            : new HighlightedItem(
-                itemId, 
-                itemManager.getItemComposition(itemId).getPrice(), 
-                itemManager.getItemPrice(itemId)
-            );
-    }
+	@Inject
+	private ItemManager itemManager;
 
-    private HighlightedItem createShopItem(Integer itemId)
-    {
-        HighlightedItem item = buildItem(itemId);
+	private HighlightedItem buildItem(int itemId)
+	{
+		return trackedItemsManager.isTrackedItemId(itemId)
+			? new HighlightedItem(trackedItemsManager.getTrackedItem(itemId))
+			: new HighlightedItem(
+			itemId,
+			itemManager.getItemComposition(itemId).getPrice(),
+			itemManager.getItemPrice(itemId)
+		);
+	}
 
-        item.buyFrom(plugin.shop);
-        log.debug("Created new shop-mode item {}", item);
+	private HighlightedItem createShopItem(Integer itemId)
+	{
+		HighlightedItem item = buildItem(itemId);
 
-        return item;
-    }
+		item.buyFrom(plugin.shop);
+		log.debug("Created new shop-mode item {}", item);
 
-    private HighlightedItem createInventoryItem(Integer itemId)
-    {
-        HighlightedItem item = buildItem(itemId);
+		return item;
+	}
 
-        item.sellTo(plugin.shop);
-        log.debug("Created new inventory-mode item {}", item);
+	private HighlightedItem createInventoryItem(Integer itemId)
+	{
+		HighlightedItem item = buildItem(itemId);
 
-        return item;
-    }
+		item.sellTo(plugin.shop);
+		log.debug("Created new inventory-mode item {}", item);
 
-    public HighlightedItem getOrCreate(int itemId, InterfaceMode mode)
-    {
-        itemId = trackedItemsManager.getUnnotedId(itemId);
-        return mode == InterfaceMode.INVENTORY 
-            ? inventoryItems.computeIfAbsent(itemId, this::createInventoryItem)
-            : shopItems.computeIfAbsent(itemId, this::createShopItem);
-    }
+		return item;
+	}
 
-    public void clear() 
-    {
-        inventoryItems.clear();
-        shopItems.clear();
-    }
+	public HighlightedItem getOrCreate(int itemId, InterfaceMode mode)
+	{
+		itemId = trackedItemsManager.getUnnotedId(itemId);
+		return mode == InterfaceMode.INVENTORY
+			? inventoryItems.computeIfAbsent(itemId, this::createInventoryItem)
+			: shopItems.computeIfAbsent(itemId, this::createShopItem);
+	}
+
+	public void clear()
+	{
+		inventoryItems.clear();
+		shopItems.clear();
+	}
 }

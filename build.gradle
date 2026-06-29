@@ -1,7 +1,7 @@
 import com.fasterxml.jackson.databind.ObjectMapper
 
 plugins {
-	id 'java'
+    id 'java'
 }
 
 java {
@@ -11,29 +11,29 @@ java {
 }
 
 repositories {
-	mavenLocal()
-	maven {
-		url = 'https://repo.runelite.net'
-		content {
-			includeGroupByRegex("net\\.runelite.*")
-		}
-	}
-	mavenCentral()
+    mavenLocal()
+    maven {
+        url = 'https://repo.runelite.net'
+        content {
+            includeGroupByRegex("net\\.runelite.*")
+        }
+    }
+    mavenCentral()
 }
 
 def runeLiteVersion = 'latest.release'
 def pluginMainClass = 'com.hagglehelper.HaggleHelperPluginTest'
 
 dependencies {
-	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
+    compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
-	compileOnly 'org.projectlombok:lombok:1.18.30'
-	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-	testImplementation 'junit:junit:4.12'
-	testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
-	testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
-	implementation 'com.github.ben-manes.caffeine:caffeine:3.2.4'
+    testImplementation 'junit:junit:4.12'
+    testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+    testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.2.4'
 }
 
 group = 'com.hagglehelper'
@@ -45,75 +45,75 @@ sourceSets {
 }
 
 tasks.named('processResources') {
-	dependsOn(tasks.named('generateShopsJson'))
-	inputs.property("pluginVersion", project.version)
-	
+    dependsOn(tasks.named('generateShopsJson'))
+    inputs.property("pluginVersion", project.version)
+
     filesMatching('runelite-plugin.properties') {
         expand(version: project.version)
     }
 
-	from(projectDir) {
-		include 'runelite-plugin.properties'
-		include 'icon.png'
-	}
+    from(projectDir) {
+        include 'runelite-plugin.properties'
+        include 'icon.png'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.encoding = 'UTF-8'
-	options.release.set(11)
+    options.encoding = 'UTF-8'
+    options.release.set(11)
 }
 
 tasks.register('run', JavaExec) {
-	classpath = sourceSets.test.runtimeClasspath
-	mainClass = pluginMainClass
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = pluginMainClass
 
-	jvmArgs "-ea"
-	args "--developer-mode", "--debug"
+    jvmArgs "-ea"
+    args "--developer-mode", "--debug"
 }
 
 tasks.register('shadowJar', Jar) {
-	dependsOn configurations.testRuntimeClasspath
-	manifest {
-		attributes('Main-Class': pluginMainClass, 'Multi-Release': true)
-	}
+    dependsOn configurations.testRuntimeClasspath
+    manifest {
+        attributes('Main-Class': pluginMainClass, 'Multi-Release': true)
+    }
 
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	from sourceSets.main.output
-	from sourceSets.test.output
-	from {
-		configurations.testRuntimeClasspath.collect { file ->
-			file.isDirectory() ? file : zipTree(file)
-		}
-	}
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.main.output
+    from sourceSets.test.output
+    from {
+        configurations.testRuntimeClasspath.collect { file ->
+            file.isDirectory() ? file : zipTree(file)
+        }
+    }
 
-	exclude 'META-INF/INDEX.LIST'
-	exclude 'META-INF/*.SF'
-	exclude 'META-INF/*.DSA'
-	exclude 'META-INF/*.RSA'
-	exclude '**/module-info.class'
+    exclude 'META-INF/INDEX.LIST'
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude '**/module-info.class'
 
-	group = BasePlugin.BUILD_GROUP
-	archiveClassifier.set('shadow')
-	archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
+    group = BasePlugin.BUILD_GROUP
+    archiveClassifier.set('shadow')
+    archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
 }
 
 tasks.register('generateShopsJson') {
-	description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
-	group = 'build'
-	inputs.property("pluginVersion", project.version)
+    description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
+    group = 'build'
+    inputs.property("pluginVersion", project.version)
 
-	def outputFile = layout.buildDirectory.file("generated-resources/shops.json")
-	outputs.file(outputFile)
+    def outputFile = layout.buildDirectory.file("generated-resources/shops.json")
+    outputs.file(outputFile)
 
-	doLast {
-		def shops = ShopDataFetcher.makeShopsJson(project.version.toString())
-		def file = outputFile.get().asFile
+    doLast {
+        def shops = ShopDataFetcher.makeShopsJson(project.version.toString())
+        def file = outputFile.get().asFile
 
-		file.parentFile.mkdirs()
-		file.text = new ObjectMapper().writeValueAsString(shops)
-		
-		println String.format("Written to %s (%.2f KiB)", file.path, file.length() / 1024.0)
-	}
+        file.parentFile.mkdirs()
+        file.text = new ObjectMapper().writeValueAsString(shops)
+
+        println String.format("Written to %s (%.2f KiB)", file.path, file.length() / 1024.0)
+    }
 }
 
 enum VersionBump {
@@ -156,8 +156,8 @@ def bumpVersion = { VersionBump bumpType ->
     def newVersion = "${major}.${minor}.${patch}"
 
     propsFile.text = text.replaceFirst(
-        /version=\d+\.\d+\.\d+/,
-        "version=${newVersion}"
+            /version=\d+\.\d+\.\d+/,
+            "version=${newVersion}"
     )
 
     println "Version bumped to ${newVersion}"
