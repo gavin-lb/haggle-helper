@@ -122,7 +122,7 @@ enum ReleaseType {
     PATCH,
 }
 
-String getNextVersion = { ReleaseType releaseType ->
+def getNextVersion = { ReleaseType releaseType ->
     def matcher = project.version.toString() =~ /(\d+)\.(\d+)\.(\d+)/
 
     if (!matcher.find()) {
@@ -148,13 +148,13 @@ def bumpVersion = {ReleaseType releaseType ->
 }
 
 tasks.register('commitVersion') {
-    def propertiesFile = file('gradle.properties')
-    propertiesFile.text = propertiesFile.text.replaceFirst(
-            /version=\d+\.\d+\.\d+/,
-            "version=${project.version}"
-    )
-
     doLast {
+        def propertiesFile = file('gradle.properties')
+        propertiesFile.text = propertiesFile.text.replaceFirst(
+                /version=\d+\.\d+\.\d+/,
+                "version=${project.version}"
+        )
+
         exec {
             commandLine 'git', 'add', 'gradle.properties'
         }
