@@ -153,17 +153,13 @@ def getNextVersion = { ReleaseType releaseType ->
 def writeVersion = { String version ->
     def pattern = /(?m)^version=\d+\.\d+\.\d+$/
     def propertiesFile = file('gradle.properties')
-    def text = propertiesFile.text
-    def matcher = text =~ pattern
+    def matcher = propertiesFile.text =~ pattern
 
     if (!matcher.find()) {
         throw new GradleException("Couldn't find version property")
     }
 
-    propertiesFile.text = text.replaceFirst(
-        pattern,
-        "version=${version}"
-    )
+    propertiesFile.text = matcher.replaceFirst("version=${version}")
 }
 
 def commitVersion = { String version ->
