@@ -114,7 +114,7 @@ class ShopDataFetcher {
         return allLines
     }
 
-    private static Map<String, String> fetchAllShops() {
+    private static Map<String, String> fetchAllShops() throws IllegalStateException {
         Map<String, String> shopMap = [:]
         Map<String, String> pageMap = [:]
         Map<String, Set<String>> dupeMap = [:]
@@ -185,6 +185,9 @@ class ShopDataFetcher {
             offset += PAGE_SIZE
         }
 
+        if (dupeMap.size() > 0) {
+            throw new IllegalStateException('Failed to fetch shop data: unexpected duplicates found')
+        }
         return shopMap
     }
 
