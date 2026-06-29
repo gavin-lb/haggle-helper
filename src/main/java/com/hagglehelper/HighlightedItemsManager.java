@@ -42,7 +42,7 @@ public class HighlightedItemsManager {
         HighlightedItem item = buildItem(itemId);
 
         item.buyFrom(plugin.shop);
-        log.debug("Created new shop {}", item);
+        log.debug("Created new shop-mode item {}", item);
 
         return item;
     }
@@ -52,7 +52,7 @@ public class HighlightedItemsManager {
         HighlightedItem item = buildItem(itemId);
 
         item.sellTo(plugin.shop);
-        log.debug("Created new inventory {}", item);
+        log.debug("Created new inventory-mode item {}", item);
 
         return item;
     }
