@@ -2,6 +2,7 @@ package com.hagglehelper;
 
 import com.google.inject.Provides;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
+import com.hagglehelper.HaggleHelperConfig.OverlayMode;
 import com.hagglehelper.Shop.UnprofitableTransactionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
@@ -76,6 +77,9 @@ public class HaggleHelperPlugin extends Plugin
 	private HighlightedItemsManager highlightedItemsManager;
 
 	@Inject
+    private TrackedItemsManager trackedItemsManager;
+
+	@Inject
     private ClientThread clientThread;
 
 	private NavigationButton navButton;
@@ -98,7 +102,6 @@ public class HaggleHelperPlugin extends Plugin
 			.put(InventoryID.XBOWS_SHOP_ADDY,"Crossbow Shop (Keldagrim)")
 			.build();
 
-	public Map<Integer, TrackedItem> trackedItems;
 	public Map<String, Shop> shopsMap = new HashMap<>();
 	
 	public static String VERSION;
@@ -235,7 +238,7 @@ public class HaggleHelperPlugin extends Plugin
 
 	@Subscribe
     protected void onMenuOptionClicked(MenuOptionClicked event) {
-        if (!config.blockUnprofitable()) 
+        if (config.blockUnprofitable() == OverlayMode.NONE) 
 		{
 			return;
 		}
@@ -252,7 +255,11 @@ public class HaggleHelperPlugin extends Plugin
 		}
 
 		int eventItemId = event.getItemId();
-		
+		if (config.blockUnprofitable() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(eventItemId))
+		{
+			return;
+		}
+
 		String menuOption = event.getMenuOption().replaceAll("<.*>", "");
 		HighlightedItem item;
 		if (menuOption.contains("Buy ")) 
@@ -278,9 +285,12 @@ public class HaggleHelperPlugin extends Plugin
             return;
         }
 
-		try {
+		try 
+		{
 			overlayPanel.addProfit(shop.processTransaction(menuOption, item));
-		} catch (UnprofitableTransactionException e) {
+		} 
+		catch (UnprofitableTransactionException e) 
+		{
 			event.consume();
 			client.addChatMessage(
 				ChatMessageType.GAMEMESSAGE, 
