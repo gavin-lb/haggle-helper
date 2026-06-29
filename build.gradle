@@ -163,14 +163,34 @@ def bumpVersion = { VersionBump bumpType ->
     println "Version bumped to ${newVersion}"
 }
 
+tasks.register("commitVersion") {
+    doLast {
+        def version = project.version.toString()
+
+        exec {
+            commandLine "git", "add", "gradle.properties"
+        }
+
+        exec {
+            commandLine "git", "commit",
+                "gradle.properties",
+                "-m",
+                "chore: update version ${version}"
+        }
+    }
+}
+
 tasks.register('bumpPatch') {
     doLast { bumpVersion(VersionBump.PATCH) }
+    finalizedBy("commitVersion")
 }
 
 tasks.register('bumpMinor') {
     doLast { bumpVersion(VersionBump.MINOR) }
+    finalizedBy("commitVersion")
 }
 
 tasks.register('bumpMajor') {
     doLast { bumpVersion(VersionBump.MAJOR) }
+    finalizedBy("commitVersion")
 }

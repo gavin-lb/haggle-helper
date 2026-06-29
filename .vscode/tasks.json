@@ -34,7 +34,7 @@
       "label": "Patch Version",
       "detail": "Increments the patch version and commits it, eg. x.y.z -> x.y.(z+1)",
       "type": "shell",
-      "command": "./gradlew bumpPatch && ./commit-version.sh",
+      "command": "./gradlew bumpPatch",
       "group": "build",
       "presentation": {
         "close": true
@@ -44,7 +44,7 @@
       "label": "Minor Version",
       "detail": "Increments the minor version and commits it, eg. x.y.z -> x.(y+1).0",
       "type": "shell",
-      "command": "./gradlew bumpMinor && ./commit-version.sh",
+      "command": "./gradlew bumpMinor",
       "group": "build",
       "presentation": {
         "close": true
@@ -54,7 +54,7 @@
       "label": "Major Version",
       "detail": "Increments the major version and commits it, eg. x.y.z -> (x+1).0.0",
       "type": "shell",
-      "command": "./gradlew bumpMajor && ./commit-version.sh",
+      "command": "./gradlew bumpMajor",
       "group": "build",
       "presentation": {
         "close": true
