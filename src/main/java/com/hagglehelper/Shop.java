@@ -298,7 +298,12 @@ public class Shop {
         return isTradableWith(item.id);
     }
         
-    public int processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException {
+    public Integer processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException {
+        if (!isTradableWith(item))
+        {
+            return null;
+        }
+        
         final int amount = Integer.parseInt(menuOption.replaceAll("\\D", ""));
 		int profit = item.mode == InterfaceMode.INVENTORY
             ? getProfitSellTo(amount, item) 
