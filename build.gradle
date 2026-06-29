@@ -15,7 +15,7 @@ repositories {
     maven {
         url = 'https://repo.runelite.net'
         content {
-            includeGroupByRegex("net\\.runelite.*")
+            includeGroupByRegex('net\\.runelite.*')
         }
     }
     mavenCentral()
@@ -40,13 +40,13 @@ group = 'com.hagglehelper'
 
 sourceSets {
     main {
-        resources.srcDir(layout.buildDirectory.dir("generated-resources"))
+        resources.srcDir(layout.buildDirectory.dir('generated-resources'))
     }
 }
 
 tasks.named('processResources') {
     dependsOn(tasks.named('generateShopsJson'))
-    inputs.property("pluginVersion", project.version)
+    inputs.property('pluginVersion', project.version)
 
     filesMatching('runelite-plugin.properties') {
         expand(version: project.version)
@@ -67,8 +67,8 @@ tasks.register('run', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = pluginMainClass
 
-    jvmArgs "-ea"
-    args "--developer-mode", "--debug"
+    jvmArgs '-ea'
+    args '--developer-mode', '--debug'
 }
 
 tasks.register('shadowJar', Jar) {
@@ -100,9 +100,9 @@ tasks.register('shadowJar', Jar) {
 tasks.register('generateShopsJson') {
     description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
     group = 'build'
-    inputs.property("pluginVersion", project.version)
+    inputs.property('pluginVersion', project.version)
 
-    def outputFile = layout.buildDirectory.file("generated-resources/shops.json")
+    def outputFile = layout.buildDirectory.file('generated-resources/shops.json')
     outputs.file(outputFile)
 
     doLast {
@@ -112,76 +112,72 @@ tasks.register('generateShopsJson') {
         file.parentFile.mkdirs()
         file.text = new ObjectMapper().writeValueAsString(shops)
 
-        println String.format("Written to %s (%.2f KiB)", file.path, file.length() / 1024.0)
+        println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
     }
 }
 
-enum VersionBump {
-    PATCH,
+enum ReleaseType {
+    MAJOR,
     MINOR,
-    MAJOR
+    PATCH,
 }
 
-def bumpVersion = { VersionBump bumpType ->
-    def matcher = project.version =~ /(\d+)\.(\d+)\.(\d+)/
+String getNextVersion = { ReleaseType releaseType ->
+    def matcher = project.version.toString() =~ /(\d+)\.(\d+)\.(\d+)/
 
-    int major = matcher.group(1) as int
-    int minor = matcher.group(2) as int
-    int patch = matcher.group(3) as int
-
-    switch (bumpType) {
-        case VersionBump.MAJOR:
-            major++
-            minor = 0
-            patch = 0
-            break
-
-        case VersionBump.MINOR:
-            minor++
-            patch = 0
-            break
-
-        case VersionBump.PATCH:
-            patch++
-            break
+    if (!matcher.find()) {
+        throw new GradleException("Invalid version: ${project.version}")
     }
 
-    project.version = "${major}.${minor}.${patch}"
+    def (_, major, minor, patch) = matcher[0]
 
-    file('gradle.properties').text = text.replaceFirst(
+    switch (releaseType) {
+        case ReleaseType.MAJOR:
+            return "${major.toInteger() + 1}.0.0"
+
+        case ReleaseType.MINOR:
+            return "${major}.${minor.toInteger() + 1}.0"
+
+        case ReleaseType.PATCH:
+            return "${major}.${minor}.${patch.toInteger() + 1}"
+    }
+}
+
+def bumpVersion = {ReleaseType releaseType ->
+    project.version = getNextVersion(releaseType)
+}
+
+tasks.register('commitVersion') {
+    def propertiesFile = file('gradle.properties')
+    propertiesFile.text = propertiesFile.text.replaceFirst(
             /version=\d+\.\d+\.\d+/,
-            "version=${newVersion}"
+            "version=${project.version}"
     )
 
-    println "Version bumped to ${newVersion}"
-}
-
-tasks.register("commitVersion") {
     doLast {
         exec {
-            commandLine "git", "add", "gradle.properties"
+            commandLine 'git', 'add', 'gradle.properties'
         }
-
         exec {
-            commandLine "git", "commit",
-                "gradle.properties",
-                "-m",
+            commandLine 'git', 'commit',
+                'gradle.properties',
+                '-m',
                 "chore: update version ${project.version}"
         }
     }
 }
 
 tasks.register('bumpPatch') {
-    doLast { bumpVersion(VersionBump.PATCH) }
-    finalizedBy("commitVersion")
+    doLast { bumpVersion(ReleaseType.PATCH) }
+    finalizedBy('commitVersion')
 }
 
 tasks.register('bumpMinor') {
-    doLast { bumpVersion(VersionBump.MINOR) }
-    finalizedBy("commitVersion")
+    doLast { bumpVersion(ReleaseType.MINOR) }
+    finalizedBy('commitVersion')
 }
 
 tasks.register('bumpMajor') {
-    doLast { bumpVersion(VersionBump.MAJOR) }
-    finalizedBy("commitVersion")
+    doLast { bumpVersion(ReleaseType.MAJOR) }
+    finalizedBy('commitVersion')
 }
