@@ -127,7 +127,7 @@ enum ReleaseType {
 }
 
 def getNextVersion = { ReleaseType releaseType ->
-    def matcher = project.version.toString() =~ /^(\d+)\.(\d+)\.(\d+)$/
+    def matcher = project.version =~ /^(\d+)\.(\d+)\.(\d+)$/
 
     if (!matcher.matches()) {
         throw new GradleException("Invalid version: ${project.version}")
