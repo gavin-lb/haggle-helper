@@ -14,22 +14,46 @@ class ShopDataFetcher {
     static final String WIKI_BASE = 'https://oldschool.runescape.wiki/api.php?action=bucket&format=json'
     static final String USER_AGENT_FORMAT = 'HaggleHelper/%s (gradle build task)'
     static final int PAGE_SIZE = 5000
+    static final Map<String, Set<String>> EXPECTED_DUPLICATE_SHOPS = [
+        'Magic Guild Store': [
+            'Magic Guild Store (Runes and Staves)',
+            'Magic Guild Store (Mystic Robes)'
+        ] as Set<String>,
+        'Crossbow Shop': [
+            'Crossbow Shop (White Wolf Mountain)',
+            'Crossbow Shop (Dwarven Mine)',
+            'Crossbow Shop (Keldagrim)'
+        ] as Set<String>,
+        'Ratpit Bar': [
+            'Ratpit bar (Port Sarim)',
+            'Ratpit bar (Keldagrim)',
+            'Ratpit bar (Varrock)'
+        ] as Set<String>,
+        'Bounty Hunter Shop': [
+            'Bounty Hunter Shop (Deadman Mode)',
+            'Bounty Hunter Shop (historical)'
+        ] as Set<String>
+    ]
 
     private static String userAgent
 
-    static Map<String, Object> fetchAllShops(String version) {
+    static Map<String, Object> makeShopsJson(String version) {
         userAgent = String.format(USER_AGENT_FORMAT, version)
+
+        CompletableFuture<Map<String, String>> allShopsFuture = CompletableFuture.supplyAsync {
+            fetchAllShops()
+        }
 
         CompletableFuture<Set<String>> generalStoresFuture = CompletableFuture.supplyAsync {
             fetchGeneralStores()
         }
 
         CompletableFuture<List<Map<String, Object>>> storeLinesFuture = CompletableFuture.supplyAsync {
-            fetchAllStoreLines()
+            fetchStoreLines()
         }
 
         CompletableFuture<Map<String, Integer>> itemIdsFuture = CompletableFuture.supplyAsync {
-            resolveItemIds()
+            fetchItemIds()
         }
 
         Set<String> generalStores = generalStoresFuture.join()
@@ -41,14 +65,17 @@ class ShopDataFetcher {
         Map<String, Integer> itemIdMap = itemIdsFuture.join()
         println "Resolved ${itemIdMap.size()} item IDs"
 
-        Map<String, Object> shops = makeShopMap(storeLines, itemIdMap, generalStores)
+        Map<String, String> shopMap = allShopsFuture.join()
+        println "Mapped ${shopMap.size()} differing shop names"
+
+        Map<String, Object> shops = makeShopMap(storeLines, itemIdMap, generalStores, shopMap)
 
         println "Built ${shops.size()} shops"
 
         return shops
     }
 
-    private static List<Map<String, Object>> fetchAllStoreLines() {
+    private static List<Map<String, Object>> fetchStoreLines() {
         List<Map<String, Object>> allLines = []
         int offset = 0
 
@@ -87,14 +114,122 @@ class ShopDataFetcher {
         return allLines
     }
 
-    private static Map<String, Integer> resolveItemIds() {
+    private static Map<String, String> fetchAllShops() {
+        Map<String, String> shopMap = [:]
+        Map<String, String> pageMap = [:]
+        Map<String, Set<String>> dupeMap = [:]
+
+        int offset = 0
+
+        while (true) {
+            String query = URLEncoder.encode(
+                "bucket('infobox_shop')" +
+                ".select('shop_name', 'page_name')" +
+                ".where('shop_name','!=','page_name')" +
+                ".limit(${PAGE_SIZE})" +
+                ".offset(${offset})" +
+                '.run()',
+                'UTF-8'
+            )
+
+            List<Map<String, Object>> rows = fetchBucket(query)
+
+            rows.each {
+                Map<String, Object> row -> {
+                    String shop = row.shop_name
+                    String page = row.page_name
+
+                    if (shop == null || page == null) {
+                        println "Null name: page_name='${page}', shop_name='${shop}'"
+                        return
+                    }
+
+                    if (shop == page) {
+                        return
+                    }
+
+                    if (shopMap.containsKey(page)) {
+                        return
+                    }
+
+                    if (EXPECTED_DUPLICATE_SHOPS.containsKey(shop) && EXPECTED_DUPLICATE_SHOPS[shop].contains(page)) {
+                        return
+                    }
+
+                    if (dupeMap.containsKey(shop)) {
+                        println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
+                        dupeMap[shop].add(page)
+                        return
+                    }
+
+                    if (pageMap.containsKey(shop)) {
+                        println "UNEXPECTED DUPLICATE - '${shop}': '${page}'"
+                        println "UNEXPECTED DUPLICATE - '${shop}': '${pageMap[shop]}'"
+                        dupeMap[shop] = [] as Set<String>
+                        dupeMap[shop].add(page)
+                        String oldPage = pageMap.remove(shop)
+                        dupeMap[shop].add(oldPage)
+                        shopMap.remove(oldPage)
+                        return
+                    }
+
+                    shopMap[page] = shop
+                    pageMap[shop] = page
+                }
+            }
+
+            if (rows.size() < PAGE_SIZE) {
+                break
+            }
+
+            offset += PAGE_SIZE
+        }
+
+        return shopMap
+    }
+
+    private static Set<String> fetchGeneralStores() {
+        String text = new URL(
+            'https://oldschool.runescape.wiki/w/General_store?action=raw'
+        ).getText('UTF-8')
+
+        Set<String> stores = [] as Set<String>
+
+        boolean inLocationsTable = false
+
+        text.eachLine { String line ->
+            if (line.startsWith('==Locations==')) {
+                inLocationsTable = true
+                return
+            }
+
+            if (!inLocationsTable) {
+                return
+            }
+
+            if (line.startsWith('|}')) {
+                inLocationsTable = false
+                return
+            }
+
+            Matcher matcher = (line =~ /^\|\[\[([^|\]]+)/)
+
+            if (matcher.find()) {
+                stores << matcher.group(1)
+            }
+        }
+
+        return stores
+    }
+
+    private static Map<String, Integer> fetchItemIds() {
         Map<String, Integer> itemIdMap = [:]
         int offset = 0
 
         while (true) {
             String query = URLEncoder.encode(
                 "bucket('infobox_item')" +
-                ".select('item_id','item_name','tradeable','page_name','page_name_sub')" +
+                ".select('item_id','item_name','page_name','page_name_sub')" +
                 ".limit(${PAGE_SIZE})" +
                 ".offset(${offset})" +
                 '.run()',
@@ -125,12 +260,8 @@ class ShopDataFetcher {
                     itemId = parseItemId(rawItemId)
                 }
 
-                if (itemId != null && row.tradeable != null) {
-                    if (itemIdMap.containsKey(name)) {
-                        println "Duplicate tradable item name: ${name} existingId=${itemIdMap[name]} newId=${itemId}"
-                    } else {
-                        itemIdMap[name] = itemId
-                    }
+                if (itemId != null) {
+                    itemIdMap.computeIfAbsent(name, key -> itemId)
                 }
             }
 
@@ -147,14 +278,17 @@ class ShopDataFetcher {
     private static Map<String, Object> makeShopMap(
         List<Map<String, Object>> allLines,
         Map<String, Integer> itemIdMap,
-        Set<String> generalStores
+        Set<String> generalStores,
+        Map<String, String> shopMap
     ) {
 
         Map<String, Object> shops = [:]
 
         allLines.each { Map<String, Object> line ->
-            String shopName = line.sold_by as String
+            String pageName = line.sold_by as String
             String itemName = line.sold_item as String
+
+            String shopName = shopMap.getOrDefault(pageName, pageName)
 
             if (!shopName || !itemName) {
                 return
@@ -184,7 +318,7 @@ class ShopDataFetcher {
                     buysAt: parsePercent(line.store_buy_multiplier, 70),
                     sellsAt: parsePercent(line.store_sell_multiplier, 100),
                     changePer: parseDelta(line.store_delta, 3.0d),
-                    isGeneral: generalStores.contains(shopName.toUpperCase()),
+                    isGeneral: generalStores.contains(pageName),
                     defaultStocks: [:]
                 ]
             }
@@ -251,40 +385,6 @@ class ShopDataFetcher {
         }
 
         return s.toDouble() / 10.0d
-    }
-
-    private static Set<String> fetchGeneralStores() {
-        String text = new URL(
-            'https://oldschool.runescape.wiki/w/General_store?action=raw'
-        ).getText('UTF-8')
-
-        Set<String> stores = [] as Set<String>
-
-        boolean inLocationsTable = false
-
-        text.eachLine { String line ->
-            if (line.startsWith('==Locations==')) {
-                inLocationsTable = true
-                return
-            }
-
-            if (!inLocationsTable) {
-                return
-            }
-
-            if (line.startsWith('|}')) {
-                inLocationsTable = false
-                return
-            }
-
-            Matcher matcher = (line =~ /^\|\[\[([^|\]]+)/)
-
-            if (matcher.find()) {
-                stores << matcher.group(1).toUpperCase()
-            }
-        }
-
-        return stores
     }
 
 }

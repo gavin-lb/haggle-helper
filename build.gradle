@@ -106,7 +106,7 @@ tasks.register('generateShopsJson') {
 	outputs.file(outputFile)
 
 	doLast {
-		def shops = ShopDataFetcher.fetchAllShops(project.version.toString())
+		def shops = ShopDataFetcher.makeShopsJson(project.version.toString())
 		def file = outputFile.get().asFile
 
 		file.parentFile.mkdirs()

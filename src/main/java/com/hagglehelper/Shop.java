@@ -41,9 +41,17 @@ public class Shop {
     }
 
     @SuppressWarnings("null")
-    public void updateStock(Item[] items) {
+    public boolean updateStock(Item[] items) {
 		log.debug("Updating items={} on shop={}", items, this);
-        Map<Integer, Integer> newStocks = Arrays.stream(items).collect(Collectors.toMap(Item::getId, Item::getQuantity));
+        Map<Integer, Integer> newStocks = Arrays.stream(items)
+            .filter(item -> item.getId() > 0)
+            .collect(Collectors.toMap(Item::getId, Item::getQuantity));
+
+        if (newStocks.equals(currentStocks))
+        {
+            log.debug("Stock unchanged");
+            return false;
+        }
 
         if (currentStocks != null && !queue.isEmpty())
         {
@@ -73,6 +81,7 @@ public class Shop {
         }
         
         currentStocks = newStocks;
+        return true;
     }
 
     public int getStockDelta(int itemId)

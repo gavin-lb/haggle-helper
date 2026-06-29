@@ -3,12 +3,14 @@ package com.hagglehelper;
 import com.google.inject.Provides;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 import com.hagglehelper.Shop.UnprofitableTransactionException;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -21,10 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -69,18 +75,56 @@ public class HaggleHelperPlugin extends Plugin
 	@Inject
 	private HighlightedItemsManager highlightedItemsManager;
 
+	@Inject
+    private ClientThread clientThread;
+
 	private NavigationButton navButton;
 
 	public Shop shop;
 
 	private static final String SHOPS_RESOURCE = "shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>(){}.getType();
-	private static final int INVENTORY_CONTAINER_ID = 93;
-	
+	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = 
+		ImmutableMap.<Integer, String>builder()
+			.put(InventoryID.MAGICGUILDSHOP,"Magic Guild Store (Runes and Staves)")
+			.put(InventoryID.MAGICGUILDSHOP_UIM,"Magic Guild Store (Runes and Staves)")
+			.put(InventoryID.MAGICGUILDSHOP_GIM,"Magic Guild Store (Runes and Staves)")
+			.put(InventoryID.MAGICGUILDSHOP2, "Magic Guild Store (Mystic Robes)")
+			.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE, "Magic Guild Store (Mystic Robes)")
+			.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE_TRIMMED, "Magic Guild Store (Mystic Robes)")
+			.put(InventoryID.SKILL_GUIDE_CRAFTING_WEAVING,"Ned's Handmade Rope (100% Wool)")
+			.put(InventoryID.XBOWS_SHOP,"Crossbow Shop (Dwarven Mine)")
+			.put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
+			.put(InventoryID.XBOWS_SHOP_ADDY,"Crossbow Shop (Keldagrim)")
+			.build();
+
 	public Map<Integer, TrackedItem> trackedItems;
 	public Map<String, Shop> shopsMap = new HashMap<>();
 	
 	public static String VERSION;
+
+	private Shop getShop(String shopName)
+	{
+		Shop foundShop = shopsMap.get(shopName);
+
+		if (foundShop == null) {
+			throw new RuntimeException(
+				String.format("No shop found with shopName='%s'", shopName)
+			);
+		}
+
+		injector.injectMembers(foundShop);
+		log.debug("Found shop={}", foundShop);
+		return foundShop;
+	}
+
+	private void initShop()
+	{
+		Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
+		shop = frame != null && !frame.isHidden() 
+			? getShop(frame.getDynamicChildren()[1].getText())
+			: null;
+	}
 
 	@Override
 	protected void startUp() throws Exception
@@ -111,7 +155,8 @@ public class HaggleHelperPlugin extends Plugin
 
 		overlayManager.add(inventoryOverlay);
 		overlayManager.add(overlayPanel);
-		shop = null;
+
+		clientThread.invoke(this::initShop);
 
 		log.debug("Haggle Helper started!");
 	}
@@ -170,30 +215,21 @@ public class HaggleHelperPlugin extends Plugin
 	@Subscribe
 	protected void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (event.getContainerId() != INVENTORY_CONTAINER_ID && client.getWidget(InterfaceID.Shopmain.ITEMS) != null) 
+		if (event.getContainerId() != InventoryID.INV && client.getWidget(InterfaceID.Shopmain.ITEMS) != null) 
 		{
-			if (shop == null)
-			{
-				Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
-				if (frame == null || frame.isHidden())
-				{
-					return;
-				}
-
-				String shopName = frame.getDynamicChildren()[1].getText();
-				log.debug("Getting shop with shopsName={}", shopName);
-				shop = shopsMap.get(shopName);
-				injector.injectMembers(shop);
-				log.debug("Setting shop={}", shop);
-			}
-
 			log.debug(
 				"Shop container changed: event={} ItemContainerId={} ContainerId={} items={}",
 				event, event.getItemContainer().getId(), event.getContainerId(), event.getItemContainer().getItems()
 			);
-
-			shop.updateStock(event.getItemContainer().getItems());
-			highlightedItemsManager.clear();
+			
+			if (shop == null)
+			{
+				log.error("Shopmain.ITEMS changed with no shop!");
+			}
+			else if (shop.updateStock(event.getItemContainer().getItems()))
+			{
+				highlightedItemsManager.clear();
+			}
 		}
 	}
 
@@ -219,11 +255,11 @@ public class HaggleHelperPlugin extends Plugin
 		
 		String menuOption = event.getMenuOption().replaceAll("<.*>", "");
 		HighlightedItem item;
-		if (menuOption.contains("Buy")) 
+		if (menuOption.contains("Buy ")) 
 		{
 			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.SHOP);
 		}
-		else if (menuOption.contains("Sell"))
+		else if (menuOption.contains("Sell "))
 		{
 			item = highlightedItemsManager.getOrCreate(eventItemId, InterfaceMode.INVENTORY);
 		}
@@ -277,6 +313,24 @@ public class HaggleHelperPlugin extends Plugin
 			shop.queue.clear();
 			shop = null;
         }
+    }
+
+	@Subscribe
+    protected void onScriptPreFired(ScriptPreFired event) {
+        if (event.getScriptId() != VarClientID.HELPER_GENERIC_TYPE_44) 
+		{
+			return;
+		}
+
+		Object[] args = event.getScriptEvent().getArguments();
+		log.debug("Shop init script running with args={}", Arrays.toString(args));
+
+		shop = getShop(
+			PROBLEM_INVENTORY_IDS.getOrDefault(
+				(int) args[1], 
+				(String) args[2]
+			)
+		);
     }
 		
 	@Provides
