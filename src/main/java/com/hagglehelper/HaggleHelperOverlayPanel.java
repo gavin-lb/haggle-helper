@@ -38,8 +38,13 @@ public class HaggleHelperOverlayPanel extends OverlayPanel
         );
     }
 
-    public void addProfit(int value) 
+    public void addProfit(Integer value) 
 	{
+        if (value == null)
+        {
+            return;
+        }
+        
 		profit += value;
 		if (sessionStart == null)
 		{
