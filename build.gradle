@@ -120,12 +120,16 @@ enum ReleaseType {
     MAJOR,
     MINOR,
     PATCH,
+
+    String getTaskName() {
+        "bump${name().capitalize()}"
+    }
 }
 
 def getNextVersion = { ReleaseType releaseType ->
-    def matcher = project.version.toString() =~ /(\d+)\.(\d+)\.(\d+)/
+    def matcher = project.version.toString() =~ /^(\d+)\.(\d+)\.(\d+)$/
 
-    if (!matcher.find()) {
+    if (!matcher.matches()) {
         throw new GradleException("Invalid version: ${project.version}")
     }
 
@@ -140,44 +144,46 @@ def getNextVersion = { ReleaseType releaseType ->
 
         case ReleaseType.PATCH:
             return "${major}.${minor}.${patch.toInteger() + 1}"
+            
+        default:
+            throw new AssertionError("Unhandled release type: ${releaseType}")
     }
 }
 
-def bumpVersion = {ReleaseType releaseType ->
-    project.version = getNextVersion(releaseType)
+def writeVersion = { String version ->
+    def pattern = /(?m)^version=\d+\.\d+\.\d+$/
+    def propertiesFile = file('gradle.properties')
+    def text = propertiesFile.text
+    def matcher = text =~ pattern
+
+    if (!matcher.find()) {
+        throw new GradleException("Couldn't find version property")
+    }
+
+    propertiesFile.text = text.replaceFirst(
+        pattern,
+        "version=${version}"
+    )
 }
 
-tasks.register('commitVersion') {
-    doLast {
-        def propertiesFile = file('gradle.properties')
-        propertiesFile.text = propertiesFile.text.replaceFirst(
-                /version=\d+\.\d+\.\d+/,
-                "version=${project.version}"
-        )
-
-        exec {
-            commandLine 'git', 'add', 'gradle.properties'
-        }
-        exec {
-            commandLine 'git', 'commit',
-                'gradle.properties',
-                '-m',
-                "chore: update version ${project.version}"
-        }
+def commitVersion = { String version ->
+    exec {
+        commandLine 'git', 'add', 'gradle.properties'
+    }
+    exec {
+        commandLine 'git', 'commit',
+            'gradle.properties',
+            '-m',
+            "chore: update version ${version}"
     }
 }
 
-tasks.register('bumpPatch') {
-    doLast { bumpVersion(ReleaseType.PATCH) }
-    finalizedBy('commitVersion')
-}
-
-tasks.register('bumpMinor') {
-    doLast { bumpVersion(ReleaseType.MINOR) }
-    finalizedBy('commitVersion')
-}
-
-tasks.register('bumpMajor') {
-    doLast { bumpVersion(ReleaseType.MAJOR) }
-    finalizedBy('commitVersion')
+ReleaseType.values().each { releaseType ->
+    tasks.register(releaseType.taskName) {
+        doLast {
+            project.version = getNextVersion(releaseType)
+            writeVersion(project.version)
+            commitVersion(project.version)
+        }
+    }
 }
