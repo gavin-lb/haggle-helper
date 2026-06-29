@@ -123,14 +123,7 @@ enum VersionBump {
 }
 
 def bumpVersion = { VersionBump bumpType ->
-    def propsFile = file('gradle.properties')
-    def text = propsFile.text
-
-    def matcher = text =~ /version=(\d+)\.(\d+)\.(\d+)/
-
-    if (!matcher.find()) {
-        throw new GradleException("Could not find version=x.y.z")
-    }
+    def matcher = project.version =~ /(\d+)\.(\d+)\.(\d+)/
 
     int major = matcher.group(1) as int
     int minor = matcher.group(2) as int
@@ -153,9 +146,9 @@ def bumpVersion = { VersionBump bumpType ->
             break
     }
 
-    def newVersion = "${major}.${minor}.${patch}"
+    project.version = "${major}.${minor}.${patch}"
 
-    propsFile.text = text.replaceFirst(
+    file('gradle.properties').text = text.replaceFirst(
             /version=\d+\.\d+\.\d+/,
             "version=${newVersion}"
     )
@@ -165,8 +158,6 @@ def bumpVersion = { VersionBump bumpType ->
 
 tasks.register("commitVersion") {
     doLast {
-        def version = project.version.toString()
-
         exec {
             commandLine "git", "add", "gradle.properties"
         }
@@ -175,7 +166,7 @@ tasks.register("commitVersion") {
             commandLine "git", "commit",
                 "gradle.properties",
                 "-m",
-                "chore: update version ${version}"
+                "chore: update version ${project.version}"
         }
     }
 }
