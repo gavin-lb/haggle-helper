@@ -3,6 +3,7 @@ package com.hagglehelper;
 import java.awt.Color;
 import java.awt.Dimension;
 
+import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -107,12 +108,12 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "blockUnprofitable",
 		name = "Block unprofitable",
-		description = "Whether to block any unprofitable transactions", 
+		description = "Which items to block any unprofitable transactions for (untracked items use their current GE price)", 
 		position = 6
 	)
-	default boolean blockUnprofitable()
+	default OverlayMode blockUnprofitable()
 	{
-		return true;
+		return OverlayMode.TRACKED;
 	}
 
 	@ConfigItem(
@@ -183,6 +184,7 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
+	@Alpha
 	@ConfigItem(
 		keyName = "tenProfitableColor",
 		name = "Sell 10 color",
@@ -192,9 +194,10 @@ public interface HaggleHelperConfig extends Config
 	)
 	default Color tenProfitableColor()
 	{
-		return Color.GREEN;
+		return new Color(0, 255, 0, 80);
 	}
 
+	@Alpha
 	@ConfigItem(
 		keyName = "fiveProfitableColor",
 		name = "Sell 5 color",
@@ -204,9 +207,10 @@ public interface HaggleHelperConfig extends Config
 	)
 	default Color fiveProfitableColor()
 	{
-		return Color.YELLOW;
+		return new Color(156, 255, 0, 80);
 	}
 
+	@Alpha
 	@ConfigItem(
 		keyName = "oneProfitableColor",
 		name = "Sell 1 color",
@@ -216,9 +220,10 @@ public interface HaggleHelperConfig extends Config
 	)
 	default Color oneProfitableColor()
 	{
-		return Color.decode("#FF8800");
+		return new Color(255, 156, 0, 80);
 	}
 
+	@Alpha
 	@ConfigItem(
 		keyName = "unprofitableColor",
 		name = "Unprofitable color",
@@ -228,7 +233,7 @@ public interface HaggleHelperConfig extends Config
 	)
 	default Color unprofitableColor()
 	{
-		return Color.RED;
+		return new Color(255, 0, 0, 80);
 	}
 	
 	//#region Number text section

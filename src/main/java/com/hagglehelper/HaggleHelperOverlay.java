@@ -16,6 +16,7 @@ import net.runelite.api.ItemComposition;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -107,8 +108,12 @@ public class HaggleHelperOverlay extends Overlay
             }
 
             int itemId = itemWidget.getItemId();
-            if (itemId <= 0
-                    || config.overlayEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)) 
+            if (itemId <= 0 || (config.overlayEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)))
+            {
+                continue;
+            }
+
+            if (itemId == ItemID.COINS || itemId == ItemID.PLATINUM)
             {
                 continue;
             }
@@ -123,29 +128,33 @@ public class HaggleHelperOverlay extends Overlay
             HighlightedItem highlightedItem = highlightedItemsManager.getOrCreate(itemId, mode);
             
             final Rectangle bounds = new Rectangle(itemWidget.getBounds());
+            if (bounds.x < 0 || bounds.y < 0)
+            {
+                continue;
+            }
 
             Dimension padding = config.boxPadding();
             bounds.grow(padding.width, padding.height);
 
             Dimension offset = config.boxOffset();
             bounds.translate(offset.width-2, offset.height-2);
-
+            
             Color color = highlightedItem.color;
-
             if (config.showBoxFill()) 
             {
-                graphics.setColor(new Color(
-                    color.getRed(),
-                    color.getGreen(),
-                    color.getBlue(),
-                    80
-                ));
+                graphics.setColor(color);
                 graphics.fill(bounds);    
             }
-
+            
             if (config.showBoxBorder())
             {
-                graphics.setColor(color);
+                graphics.setColor(
+                    new Color(
+                        color.getRed(), 
+                        color.getGreen(),
+                        color.getBlue()
+                    )
+                );
                 graphics.draw(bounds);
             }
 
