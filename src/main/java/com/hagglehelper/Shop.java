@@ -15,6 +15,9 @@ import net.runelite.api.Item;
 
 @Slf4j
 public class Shop {
+    public final int SELL_TO_FLOOR = 10;
+    public final int BUY_FROM_FLOOR = 30;
+    
     @Inject
     private HaggleHelperConfig config;
 
@@ -116,7 +119,7 @@ public class Shop {
 
     public int getItemPriceSellTo(int itemId, int itemValue) 
     {
-        return getItemPrice(itemId, itemValue, buysAt);
+        return Math.max(getItemPrice(itemId, itemValue, buysAt), SELL_TO_FLOOR);
     }
 
     public int getItemPriceBuyFrom(HighlightedItem item) 
@@ -126,7 +129,7 @@ public class Shop {
 
     public int getItemPriceBuyFrom(int itemId, int itemValue) 
     {
-        return getItemPrice(itemId, itemValue, sellsAt);
+        return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR);
     }
 
     public int getNumProfitableSellTo(int itemId, int cost, int itemValue) 
@@ -191,7 +194,7 @@ public class Shop {
         float pricePercent = sellsAt + changePer * getStockDelta(itemId);
         int revenue = 0;
         for (int i = 0; i < quantity; i++, pricePercent += changePer) {
-            revenue += (int) Math.floor(pricePercent * itemValue / 100);
+            revenue += (int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100);
         }
 
         return revenue;
@@ -212,7 +215,7 @@ public class Shop {
         float pricePercent = buysAt + changePer * getStockDelta(itemId);
         int revenue = 0;
         for (int i = 0; i < quantity; i++, pricePercent -= changePer) {
-            revenue += (int) Math.floor(pricePercent * itemValue / 100);
+            revenue += (int) Math.floor(Math.max(pricePercent, SELL_TO_FLOOR) * itemValue / 100);
         }
 
         return revenue;
@@ -310,7 +313,7 @@ public class Shop {
 		
 		if (profit > amount*config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance())) 
 		{
-			log.debug("Allowing profitable transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+			log.debug("Allowing profitable transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
             queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
             item.numProfitable -= amount;
             item.maxProfit -= profit;
@@ -318,7 +321,7 @@ public class Shop {
 			return profit;
 		}
 
-        log.debug("Blocked transaction: sellAmount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+        log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
         throw new UnprofitableTransactionException();
     }
 
