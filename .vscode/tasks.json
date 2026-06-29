@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Clean & Build (refresh dependencies)",
+      "detail": "Runs the Gradle tasks to clean the output directory and build with refreshed dependencies",
+      "type": "shell",
+      "command": "./gradlew clean && ./gradlew build --refresh-dependencies",
+      "group": "build"
+    },
+    {
+      "label": "Build Shadow JAR",
+      "detail": "Runs the Gradle task to build a Shadow JAR",
+      "type": "shell",
+      "command": "./gradlew shadowJar",
+      "group": "build"
+    },
+    {
+      "label": "Build & Run Shadow JAR (Windows JVM)",
+      "detail": "Builds a Shadow JAR and runs it in the Windows JVM",
+      "type": "shell",
+      "dependsOn": "Build Shadow JAR",
+      "dependsOrder": "sequence",
+      "command": "java.exe -ea -jar \"$(find ./build/libs -name '*-all.jar' | sort -V | tail -n1)\"",
+      "group": "build"
+    }
+  ]
+}
