@@ -115,7 +115,7 @@ public class HaggleHelperOverlay extends Overlay
 
             ItemComposition itemComposition = itemManager.getItemComposition(itemId);
             if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition.getLinkedNoteId())
-                    || !itemComposition.isTradeable()) 
+                    || mode == InterfaceMode.INVENTORY && !itemComposition.isTradeable()) 
             {
                 continue;
             }
