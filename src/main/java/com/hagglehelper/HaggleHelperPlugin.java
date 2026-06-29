@@ -100,7 +100,7 @@ public class HaggleHelperPlugin extends Plugin
 
 		panel = injector.getInstance(HaggleHelperPanel.class);
 		panel.init();
-		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "hagglehelper_icon.png");
+		final BufferedImage icon = ImageUtil.loadImageResource(HaggleHelperPlugin.class, "/icon.png");
 		navButton = NavigationButton.builder()
 			.tooltip("Haggle Helper")
 			.icon(icon)

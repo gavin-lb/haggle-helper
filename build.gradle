@@ -52,8 +52,9 @@ tasks.named('processResources') {
         expand(version: project.version)
     }
 
-	from('.') {
+	from(projectDir) {
 		include 'runelite-plugin.properties'
+		include 'icon.png'
 	}
 }
 
