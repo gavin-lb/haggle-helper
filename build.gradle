@@ -202,9 +202,9 @@ def gitCommit = tasks.register("gitCommitVersion", Exec) {
     dependsOn gitAdd
     doFirst {
         commandLine "git", "commit",
-            "gradle.properties",
-            "-m",
-            "chore: update version ${version}"
+                "gradle.properties",
+                "-m",
+                "chore: update version ${version}"
     }
 }
 
