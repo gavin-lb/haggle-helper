@@ -194,20 +194,26 @@ class Version {
     }
 }
 
+def gitAdd = tasks.register("gitAddVersion", Exec) {
+    commandLine "git", "add", "gradle.properties"
+}
+
+def gitCommit = tasks.register("gitCommitVersion", Exec) {
+    dependsOn gitAdd
+    doFirst {
+        commandLine "git", "commit",
+            "gradle.properties",
+            "-m",
+            "chore: update version ${project.version}"
+    }
+}
+
 Version.ReleaseType.values().each { releaseType ->
     tasks.register(releaseType.taskName) {
         doLast {
             project.version.increment(releaseType)
             project.version.write(file('gradle.properties'))
-            exec {
-                commandLine 'git', 'add', 'gradle.properties'
-            }
-            exec {
-                commandLine 'git', 'commit',
-                        'gradle.properties',
-                        '-m',
-                        "chore: update version ${project.version}"
-            }
         }
+        finalizedBy(gitCommit)
     }
 }
