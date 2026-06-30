@@ -7,10 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Item;
 
 @Slf4j
+@ToString
 public class Shop
 {
 	public final int SELL_TO_FLOOR = 10;
@@ -331,15 +334,6 @@ public class Shop
 
 		log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
 		throw new UnprofitableTransactionException();
-	}
-
-	@Override
-	public String toString()
-	{
-		return String.format(
-			"Shop{name=%s, sellsAt=%d, buysAt=%d, changePer=%f, defaultStocks=%s, currentStocks=%s, general=%s, queue=%s}",
-			name, sellsAt, buysAt, changePer, defaultStocks, currentStocks, isGeneral, queue
-		);
 	}
 
 	public static class UnprofitableTransactionException extends Exception

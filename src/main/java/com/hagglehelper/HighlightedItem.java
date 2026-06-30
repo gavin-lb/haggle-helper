@@ -1,8 +1,12 @@
 package com.hagglehelper;
 
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
+
+import lombok.ToString;
+
 import java.awt.Color;
 
+@ToString
 public class HighlightedItem
 {
 	final public int id;
@@ -45,14 +49,5 @@ public class HighlightedItem
 		this.currentPrice = shop.getItemPriceBuyFrom(this);
 		this.color = shop.getColorBuyFrom(this);
 		this.mode = InterfaceMode.SHOP;
-	}
-
-	@Override
-	public String toString()
-	{
-		return String.format(
-			"HighlightedItem{id=%d, value=%d, cost=%d, numProfitable=%d, maxProfit=%d, currentPrice=%d}",
-			this.id, this.value, this.cost, this.numProfitable, this.maxProfit, this.currentPrice
-		);
 	}
 }
