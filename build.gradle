@@ -1,5 +1,7 @@
 import com.fasterxml.jackson.databind.ObjectMapper
 
+import java.util.regex.Pattern
+
 plugins {
     id 'java'
 }
@@ -37,6 +39,7 @@ dependencies {
 }
 
 group = 'com.hagglehelper'
+version = new Version(version)
 
 sourceSets {
     main {
@@ -116,70 +119,95 @@ tasks.register('generateShopsJson') {
     }
 }
 
-enum ReleaseType {
-    MAJOR,
-    MINOR,
-    PATCH
+class Version {
 
-    String getTaskName() {
-        "bump${name().capitalize()}"
+    private static final String SEMVER_REGEX = /\d+\.\d+\.\d+/
+    private static final Pattern PATTERN = ~/^${SEMVER_REGEX}$/
+    private static final Pattern PROPERTY_PATTERN = ~/(?m)^version=${SEMVER_REGEX}$/
+
+    int major
+    int minor
+    int patch
+
+    Version(String version) {
+        this(*parse(version))
+    }
+
+    Version(int major, int minor, int patch) {
+        this.major = major
+        this.minor = minor
+        this.patch = patch
+    }
+
+    void increment(ReleaseType releaseType) {
+        switch (releaseType) {
+            case ReleaseType.PATCH:
+                this.patch++
+                break
+            case ReleaseType.MINOR:
+                this.patch = 0
+                this.minor++
+                break
+            case ReleaseType.MAJOR:
+                this.patch = 0
+                this.minor = 0
+                this.major++
+                break
+            default:
+                throw new AssertionError("Unhandled release type: ${releaseType}")
+        }
+    }
+
+    void write(File file) {
+        def matcher = file.text =~ PROPERTY_PATTERN
+
+        if (!matcher.find()) {
+            throw new GradleException("Couldn't find version property")
+        }
+
+        file.text = matcher.replaceFirst("version=${this}")
+    }
+
+    private static List<Integer> parse(String version) {
+        def matcher = version =~ PATTERN
+
+        if (!matcher.matches()) {
+            throw new GradleException("Invalid version: $version")
+        }
+
+        matcher[0][1..3]*.toInteger()
+    }
+
+    @Override
+    String toString() {
+        "$major.$minor.$patch"
+    }
+
+    static enum ReleaseType {
+        MAJOR,
+        MINOR,
+        PATCH
+
+        String getTaskName() {
+            "bump${name().capitalize()}"
+        }
     }
 }
 
-def getNextVersion = { ReleaseType releaseType ->
-    def matcher = project.version =~ /^(\d+)\.(\d+)\.(\d+)$/
-
-    if (!matcher.matches()) {
-        throw new GradleException("Invalid version: ${project.version}")
-    }
-
-    def (_, major, minor, patch) = matcher[0]
-
-    switch (releaseType) {
-        case ReleaseType.MAJOR:
-            return "${major.toInteger() + 1}.0.0"
-
-        case ReleaseType.MINOR:
-            return "${major}.${minor.toInteger() + 1}.0"
-
-        case ReleaseType.PATCH:
-            return "${major}.${minor}.${patch.toInteger() + 1}"
-            
-        default:
-            throw new AssertionError("Unhandled release type: ${releaseType}")
-    }
-}
-
-def writeVersion = { String version ->
-    def pattern = /(?m)^version=\d+\.\d+\.\d+$/
-    def propertiesFile = file('gradle.properties')
-    def matcher = propertiesFile.text =~ pattern
-
-    if (!matcher.find()) {
-        throw new GradleException("Couldn't find version property")
-    }
-
-    propertiesFile.text = matcher.replaceFirst("version=${version}")
-}
-
-def commitVersion = { String version ->
-    exec {
-        commandLine 'git', 'add', 'gradle.properties'
-    }
-    exec {
-        commandLine 'git', 'commit',
-            'gradle.properties',
-            '-m',
-            "chore: update version ${version}"
-    }
-}
-
-ReleaseType.values().each { releaseType ->
+Version.ReleaseType.values().each { releaseType ->
     tasks.register(releaseType.taskName) {
         doLast {
-            project.version = getNextVersion(releaseType)
-            writeVersion(project.version)
-            commitVersion(project.version)
+            project.version.increment(releaseType)
+            project.version.write(file('gradle.properties'))
+            exec {
+                commandLine 'git', 'add', 'gradle.properties'
+            }
+            exec {
+                commandLine 'git', 'commit',
+                        'gradle.properties',
+                        '-m',
+                        "chore: update version ${project.version}"
+            }
         }
     }
 }
