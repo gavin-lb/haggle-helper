@@ -2,6 +2,12 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.format.settings.profile": "RuneLite",
-    "java.format.settings.url": "${workspaceFolder}/.vscode/codestyle.xml",
+    "java.format.settings.url": "${workspaceFolder}/.vscode/EJC-codestyle.xml",
     "java.checkstyle.configuration": "${workspaceFolder}/.vscode/checkstyle.xml",
+    "java.checkstyle.version": "13.7.0",
+    "[java]": {
+        "editor.insertSpaces": false,
+        "editor.tabSize": 4,
+        "editor.defaultFormatter": "redhat.java"
+    },
 }
