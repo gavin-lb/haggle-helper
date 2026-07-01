@@ -49,10 +49,10 @@ sourceSets {
 
 tasks.named('processResources') {
     dependsOn(tasks.named('generateShopsJson'))
-    inputs.property('pluginVersion', project.version)
+    inputs.property('pluginVersion', version.toString())
 
     filesMatching('runelite-plugin.properties') {
-        expand(version: project.version)
+        expand(version: version.toString())
     }
 
     from(projectDir) {
@@ -97,19 +97,19 @@ tasks.register('shadowJar', Jar) {
 
     group = BasePlugin.BUILD_GROUP
     archiveClassifier.set('shadow')
-    archiveFileName.set("${rootProject.name}-${project.version}-all.jar")
+    archiveFileName.set("${rootProject.name}-${version}-all.jar")
 }
 
 tasks.register('generateShopsJson') {
     description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
     group = 'build'
-    inputs.property('pluginVersion', project.version)
+    inputs.property('pluginVersion', version.toString())
 
     def outputFile = layout.buildDirectory.file('generated-resources/shops.json')
     outputs.file(outputFile)
 
     doLast {
-        def shops = ShopDataFetcher.makeShopsJson(project.version.toString())
+        def shops = ShopDataFetcher.makeShopsJson(version.toString())
         def file = outputFile.get().asFile
 
         file.parentFile.mkdirs()
