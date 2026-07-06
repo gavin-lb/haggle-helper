@@ -8,6 +8,7 @@
     "[java]": {
         "editor.insertSpaces": false,
         "editor.tabSize": 4,
-        "editor.defaultFormatter": "redhat.java"
-    },
+        "editor.defaultFormatter": "redhat.java",
+        "editor.formatOnSave": true
+    }
 }
