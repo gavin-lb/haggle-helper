@@ -7,11 +7,19 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.CardLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
 import java.util.List;
+
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -22,6 +30,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -192,18 +201,17 @@ public class HaggleHelperPanel extends PluginPanel
 			new EmptyBorder(8, 8, 8, 8))
 		);
 
-		buildButton(removeAllButton, "icons/delete.png");
-		removeAllButton.setToolTipText("Removes all tracked items");
-		buildButton(updateAllButton, "icons/balance.png");
-		updateAllButton.setToolTipText("Updates all costs from current Grand Exchange prices");
+		buildButton(removeAllButton, "icons/delete.png", "Removes all tracked items");
+		buildButton(updateAllButton, "icons/balance.png",
+			"Updates all costs from current Grand Exchange prices");
 
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		gbc.insets = new Insets(0, 4, 0, 4);
-		panel.add(removeAllButton, gbc);
+		panel.add(updateAllButton, gbc);
 
 		gbc.gridx = 1;
-		panel.add(updateAllButton, gbc);
+		panel.add(removeAllButton, gbc);
 
 		return panel;
 	}
@@ -279,20 +287,34 @@ public class HaggleHelperPanel extends PluginPanel
 		// Row 5: add button
 		c.gridy = 5;
 		c.weightx = 1;
-		buildButton(addButton, "icons/post_add.png");
+		buildButton(addButton, "icons/post_add.png", "Add or update a tracked item");
 		panel.add(addButton, c);
 
 		return panel;
 	}
 
-	private void buildButton(JButton button, String iconPath)
+	private void buildButton(JButton button, String iconPath, String tooltip)
 	{
 		button.setBackground(ColorScheme.BRAND_ORANGE);
 		button.setForeground(Color.WHITE);
 		button.setFocusPainted(false);
 		button.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
 		button.setBorder(new EmptyBorder(6, 10, 6, 10));
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		button.setIcon(new ImageIcon(ImageUtil.loadImageResource(getClass(), iconPath)));
+		button.setToolTipText(tooltip);
+
+	}
+
+	private void buildSmallButton(JButton button, String iconPath, String tooltip)
+	{
+		button.setIcon(new ImageIcon(ImageUtil.loadImageResource(getClass(), iconPath)));
+		button.setToolTipText(tooltip);
+		button.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		button.setBorderPainted(false);
+		button.setFocusPainted(false);
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		button.setBorder(new EmptyBorder(2, 4, 2, 4));
 	}
 
 	private JScrollPane buildListSection()
@@ -466,41 +488,221 @@ public class HaggleHelperPanel extends PluginPanel
 		row.add(icon, BorderLayout.WEST);
 
 		// Centre: name + cost
-		JPanel centre = new JPanel(new GridLayout(2, 1));
+		JPanel centre = new JPanel();
+		centre.setLayout(new BoxLayout(centre, BoxLayout.Y_AXIS));
 		centre.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		JLabel nameLabel = new JLabel(ti.getName());
 		nameLabel.setForeground(Color.WHITE);
 		nameLabel.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
+		nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
 		centre.add(nameLabel);
 
-		JLabel costLabel = new JLabel("Cost: " + HaggleHelperPlugin.formatGp(ti.getCost()) + " gp");
+		// Cost display/editor
+		CardLayout cardLayout = new CardLayout();
+		JPanel costPanel = new JPanel(cardLayout);
+		costPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+
+		JLabel costLabel = new JLabel(
+			"Cost: " + HaggleHelperPlugin.formatGp(ti.getCost()) + " gp");
 		costLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		costLabel.setFont(FontManager.getRunescapeSmallFont());
-		centre.add(costLabel);
+
+		// Editor
+		JTextField costEditor = new JTextField(String.valueOf(ti.getCost()));
+		costEditor.setFont(FontManager.getRunescapeSmallFont());
+		costEditor.setForeground(Color.WHITE);
+		costEditor.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		costEditor.setCaretColor(Color.WHITE);
+		costEditor.setBorder(BorderFactory.createEmptyBorder());
+		costEditor.setOpaque(false);
+
+		JLabel costPrefix = new JLabel("Cost: ");
+		costPrefix.setFont(FontManager.getRunescapeSmallFont());
+		costPrefix.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+
+		JLabel gpSuffix = new JLabel(" gp");
+		gpSuffix.setFont(FontManager.getRunescapeSmallFont());
+		gpSuffix.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+
+		JPanel editorPanel = new JPanel();
+		editorPanel.setLayout(new BoxLayout(editorPanel, BoxLayout.X_AXIS));
+		editorPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		editorPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		editorPanel.add(costPrefix);
+		editorPanel.add(costEditor);
+		editorPanel.add(gpSuffix);
+
+		editorPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE,
+			editorPanel.getPreferredSize().height));
+
+		costPanel.add(costLabel, "label");
+		costPanel.add(editorPanel, "editor");
+		cardLayout.show(costPanel, "label");
+
+		costPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		centre.add(costPanel);
 
 		row.add(centre, BorderLayout.CENTER);
 
-		// Remove button
-		JButton remove = new JButton("✕");
-		remove.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
-		remove.setForeground(new Color(220, 50, 50));
-		remove.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		remove.setBorderPainted(false);
-		remove.setFocusPainted(false);
-		remove.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		Runnable resizeEditor = () ->
+		{
+			String text = costEditor.getText();
+			if (text.isEmpty())
+			{
+				text = "0";
+			}
+
+			FontMetrics fm = costEditor.getFontMetrics(costEditor.getFont());
+
+			int width = fm.stringWidth(text) + 1;
+			int height = costEditor.getPreferredSize().height;
+
+			Dimension size = new Dimension(width, height);
+
+			costEditor.setPreferredSize(size);
+			costEditor.setMaximumSize(size);
+			costEditor.setMinimumSize(size);
+
+			editorPanel.revalidate();
+			editorPanel.repaint();
+		};
+
+		resizeEditor.run();
+
+		costEditor.getDocument().addDocumentListener(new DocumentListener()
+		{
+			@Override
+			public void insertUpdate(DocumentEvent e)
+			{
+				resizeEditor.run();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e)
+			{
+				resizeEditor.run();
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e)
+			{
+				resizeEditor.run();
+			}
+		});
+
+		Runnable cancelEdit = () ->
+		{
+			costEditor.setText(String.valueOf(ti.getCost()));
+			resizeEditor.run();
+			cardLayout.show(costPanel, "label");
+		};
+
+		Runnable commitEdit = () ->
+		{
+			try
+			{
+				int newCost = Integer.parseInt(
+					costEditor.getText().replace(",", "").trim());
+
+				if (newCost < 0)
+				{
+					throw new NumberFormatException();
+				}
+
+				clientThread.invoke(() ->
+				{
+					trackedItemsManager.setCost(
+						ti.getItemId(),
+						ti.getName(),
+						newCost
+					);
+
+					SwingUtilities.invokeLater(this::refreshList);
+				});
+			}
+			catch (NumberFormatException ignored)
+			{
+				cancelEdit.run();
+			}
+		};
+
+		// Save on Enter
+		costEditor.addActionListener(e -> commitEdit.run());
+
+		// Save when focus lost
+		costEditor.addFocusListener(new FocusAdapter()
+		{
+			@Override
+			public void focusLost(FocusEvent e)
+			{
+				commitEdit.run();
+			}
+		});
+
+		// Cancel on Esc
+		costEditor.getInputMap().put(
+			KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+			"cancel"
+		);
+
+		costEditor.getActionMap().put("cancel", new AbstractAction()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				cancelEdit.run();
+			}
+		});
+
+		// Buttons
+		JPanel buttons = new JPanel(new GridLayout(1, 2));
+		buttons.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+
+		JButton edit = new JButton();
+		buildSmallButton(edit, "icons/edit.png", "Edit cost of this tracked item");
+		edit.addActionListener(e ->
+		{
+			costEditor.setText(String.valueOf(ti.getCost()));
+			resizeEditor.run();
+
+			cardLayout.show(costPanel, "editor");
+			costEditor.requestFocusInWindow();
+			costEditor.selectAll();
+		});
+		buttons.add(edit);
+
+		JButton update = new JButton();
+		buildSmallButton(update, "icons/balance.png", "Update cost from Grand Exchange price");
+		update.addActionListener(e ->
+		{
+			clientThread.invoke(() ->
+			{
+				trackedItemsManager.setCost(
+					ti.getItemId(),
+					ti.getName(),
+					itemManager.getItemPrice(ti.getItemId())
+				);
+				SwingUtilities.invokeLater(this::refreshList);
+			});
+		});
+		buttons.add(update);
+
+		JButton remove = new JButton();
+		buildSmallButton(remove, "icons/delete.png", "Remove this tracked item");
 		remove.addActionListener(e ->
 		{
 			clientThread.invoke(() ->
 			{
 				trackedItemsManager.removeItem(ti.getItemId());
-				SwingUtilities.invokeLater(() ->
-				{
-					refreshList();
-				});
+				SwingUtilities.invokeLater(this::refreshList);
 			});
 		});
-		row.add(remove, BorderLayout.EAST);
+		buttons.add(remove);
+
+		row.add(buttons, BorderLayout.EAST);
 
 		return row;
 	}
