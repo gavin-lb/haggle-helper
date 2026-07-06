@@ -37,9 +37,7 @@ public class TrackedItemsManager
 			public Integer load(@Nonnull Integer itemId)
 			{
 				ItemComposition item = itemManager.getItemComposition(itemId);
-				return item.getNote() == -1
-					? itemId
-					: item.getLinkedNoteId();
+				return item.getNote() == -1 ? itemId : item.getLinkedNoteId();
 			}
 		});
 	@Inject
@@ -91,7 +89,8 @@ public class TrackedItemsManager
 	public TrackedItem[] getTrackedItems()
 	{
 		return costs.keySet().stream()
-			.map(id -> new TrackedItem(id, names.get(id), costs.get(id), itemManager.getItemComposition(id).getPrice()))
+			.map(id -> new TrackedItem(id, names.get(id), costs.get(id), itemManager
+				.getItemComposition(id).getPrice()))
 			.sorted(Comparator.comparing(item -> item.getName()))
 			.toArray(TrackedItem[]::new);
 	}
@@ -102,11 +101,11 @@ public class TrackedItemsManager
 
 		return isTrackedItemId(itemId)
 			? new TrackedItem(
-			itemId,
-			names.get(itemId),
-			costs.get(itemId),
-			itemManager.getItemComposition(itemId).getPrice()
-		)
+				itemId,
+				names.get(itemId),
+				costs.get(itemId),
+				itemManager.getItemComposition(itemId).getPrice()
+			)
 			: null;
 	}
 
@@ -149,7 +148,8 @@ public class TrackedItemsManager
 			{
 				stored.put(
 					e.getKey(),
-					new StoredEntry(names.getOrDefault(e.getKey(), "Item " + e.getKey()), e.getValue())
+					new StoredEntry(names.getOrDefault(e.getKey(), "Item " + e.getKey()), e
+						.getValue())
 				);
 			}
 			config.setItemCostsJson(gson.toJson(stored));
@@ -172,4 +172,4 @@ public class TrackedItemsManager
 		}
 	}
 }
- 
+

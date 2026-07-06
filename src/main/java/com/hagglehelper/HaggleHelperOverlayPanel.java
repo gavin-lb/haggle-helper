@@ -59,8 +59,7 @@ public class HaggleHelperOverlayPanel extends OverlayPanel
 			return 0;
 		}
 
-		long elapsedSeconds =
-			Duration.between(sessionStart, Instant.now()).getSeconds();
+		long elapsedSeconds = Duration.between(sessionStart, Instant.now()).getSeconds();
 
 		if (elapsedSeconds <= 0)
 		{

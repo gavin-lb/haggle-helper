@@ -22,7 +22,8 @@ public class HighlightedItemsManager
 	@Inject
 	private ItemManager itemManager;
 
-	private final Map<InterfaceMode, Map<Integer, HighlightedItem>> items = new EnumMap<>(InterfaceMode.class)
+	private final Map<InterfaceMode, Map<Integer, HighlightedItem>> items = new EnumMap<>(
+		InterfaceMode.class)
 	{
 		{
 			put(InterfaceMode.INVENTORY, new HashMap<>());
@@ -32,9 +33,12 @@ public class HighlightedItemsManager
 
 	private HighlightedItem buildItem(int itemId)
 	{
-		return trackedItemsManager.isTrackedItemId(itemId) ? new HighlightedItem(trackedItemsManager.getTrackedItem(itemId)) : new HighlightedItem(
-			itemId, itemManager.getItemComposition(itemId).getPrice(), itemManager.getItemPrice(itemId)
-		);
+		return trackedItemsManager.isTrackedItemId(itemId)
+			? new HighlightedItem(trackedItemsManager.getTrackedItem(itemId))
+			: new HighlightedItem(
+				itemId, itemManager.getItemComposition(itemId).getPrice(), itemManager.getItemPrice(
+					itemId)
+			);
 	}
 
 	private HighlightedItem createItem(int itemId, InterfaceMode mode)

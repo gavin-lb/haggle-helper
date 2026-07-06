@@ -67,7 +67,8 @@ public class Shop
 				{
 					int previousStock = currentStocks.getOrDefault(itemId, 0);
 					int newStock = newStocks.get(itemId);
-					log.debug("queued item, queued={} previousStock={} currentStock={}", queued, previousStock, newStock);
+					log.debug("queued item, queued={} previousStock={} currentStock={}", queued,
+						previousStock, newStock);
 
 					int newQueued = queued - newStock + previousStock;
 					if (newQueued != 0)
@@ -231,9 +232,7 @@ public class Shop
 
 	public int getProfitSellTo(int quantity, int itemId, int cost, int itemValue)
 	{
-		return quantity > 0
-			? getRevenueSellTo(quantity, itemId, itemValue) - cost * quantity
-			: 0;
+		return quantity > 0 ? getRevenueSellTo(quantity, itemId, itemValue) - cost * quantity : 0;
 	}
 
 	public int getProfitBuyFrom(int quantity, HighlightedItem item)
@@ -243,9 +242,7 @@ public class Shop
 
 	public int getProfitBuyFrom(int quantity, int itemId, int cost, int itemValue)
 	{
-		return quantity > 0
-			? cost * quantity - getRevenueBuyFrom(quantity, itemId, itemValue)
-			: 0;
+		return quantity > 0 ? cost * quantity - getRevenueBuyFrom(quantity, itemId, itemValue) : 0;
 	}
 
 	public Color getColorSellTo(HighlightedItem item)
@@ -279,11 +276,13 @@ public class Shop
 		{
 			return config.unprofitableColor();
 		}
-		else if (profit10 > 10 * profitThreshold && profit10 > Math.max(profit5, profit1) && (numProfitable >= 10 || maxProfit - profit10 < bulkLossAllowance))
+		else if (profit10 > 10 * profitThreshold && profit10 > Math.max(profit5, profit1) &&
+			(numProfitable >= 10 || maxProfit - profit10 < bulkLossAllowance))
 		{
 			return config.tenProfitableColor();
 		}
-		else if (profit5 > 5 * profitThreshold && profit5 > profit1 && (numProfitable >= 5 || maxProfit - profit5 < bulkLossAllowance))
+		else if (profit5 > 5 * profitThreshold && profit5 > profit1 && (numProfitable >= 5 ||
+			maxProfit - profit5 < bulkLossAllowance))
 		{
 			return config.fiveProfitableColor();
 		}
@@ -303,7 +302,8 @@ public class Shop
 		return isTradableWith(item.id);
 	}
 
-	public Integer processTransaction(String menuOption, HighlightedItem item) throws UnprofitableTransactionException
+	public Integer processTransaction(String menuOption, HighlightedItem item)
+		throws UnprofitableTransactionException
 	{
 		if (!isTradableWith(item))
 		{
@@ -319,12 +319,16 @@ public class Shop
 		int queued = queue.getOrDefault(item.id, 0);
 		if (queued != 0)
 		{
-			log.debug("Transaction while queued, queued={} amount={} item={}", queued, amount, item);
+			log.debug("Transaction while queued, queued={} amount={} item={}", queued, amount,
+				item);
 		}
 
-		if (profit > amount * config.profitThreshold() && (amount <= item.numProfitable || profitDelta <= config.bulkLossAllowance()))
+		if (profit > amount * config.profitThreshold() && (amount <= item.numProfitable ||
+			profitDelta <= config.bulkLossAllowance()))
 		{
-			log.debug("Allowing profitable transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+			log.debug(
+				"Allowing profitable transaction: amount={} queued={} profit={} profitDelta={} item={}",
+				amount, queued, profit, profitDelta, item);
 			queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
 			item.numProfitable -= amount;
 			item.maxProfit -= profit;
@@ -332,7 +336,8 @@ public class Shop
 			return profit;
 		}
 
-		log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}", amount, queued, profit, profitDelta, item);
+		log.debug("Blocked transaction: amount={} queued={} profit={} profitDelta={} item={}",
+			amount, queued, profit, profitDelta, item);
 		throw new UnprofitableTransactionException();
 	}
 

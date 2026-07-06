@@ -105,7 +105,8 @@ public class HaggleHelperOverlay extends Overlay
 			}
 
 			int itemId = itemWidget.getItemId();
-			if (itemId <= 0 || (config.overlayEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId)))
+			if (itemId <= 0 || (config.overlayEnabled() == OverlayMode.TRACKED &&
+				!trackedItemsManager.isTrackedItemId(itemId)))
 			{
 				continue;
 			}
@@ -116,7 +117,9 @@ public class HaggleHelperOverlay extends Overlay
 			}
 
 			ItemComposition itemComposition = itemManager.getItemComposition(itemId);
-			if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition.getLinkedNoteId()) || mode == InterfaceMode.INVENTORY && !itemComposition.isTradeable())
+			if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition
+				.getLinkedNoteId()) || mode == InterfaceMode.INVENTORY && !itemComposition
+					.isTradeable())
 			{
 				continue;
 			}
@@ -150,10 +153,14 @@ public class HaggleHelperOverlay extends Overlay
 
 			if (config.showCurrentPrice())
 			{
-				final String currentPriceText = config.shortenCurrentPrice() ? formatGp(highlightedItem.currentPrice) : String.valueOf(highlightedItem.currentPrice);
+				final String currentPriceText = config.shortenCurrentPrice()
+					? formatGp(highlightedItem.currentPrice)
+					: String.valueOf(highlightedItem.currentPrice);
 
 				Dimension currentPriceOffset = config.currentPriceOffset();
-				OverlayUtil.renderTextLocation(graphics, new Point(bounds.x + currentPriceOffset.width - fm.stringWidth(currentPriceText), bounds.y + currentPriceOffset.height), currentPriceText, config.currentPriceColor());
+				OverlayUtil.renderTextLocation(graphics, new Point(bounds.x +
+					currentPriceOffset.width - fm.stringWidth(currentPriceText), bounds.y +
+						currentPriceOffset.height), currentPriceText, config.currentPriceColor());
 			}
 
 			if (highlightedItem.maxProfit > config.profitThreshold())
@@ -161,16 +168,22 @@ public class HaggleHelperOverlay extends Overlay
 				if (config.showNumber())
 				{
 					Dimension numberOffset = config.numberOffset();
-					OverlayUtil.renderTextLocation(graphics, new Point(bounds.x + numberOffset.width, bounds.y + numberOffset.height), String.valueOf(highlightedItem.numProfitable), config.numberColor());
+					OverlayUtil.renderTextLocation(graphics, new Point(bounds.x +
+						numberOffset.width, bounds.y + numberOffset.height), String.valueOf(
+							highlightedItem.numProfitable), config.numberColor());
 				}
 
 				if (config.showProfit())
 				{
-					final String profitText = config.shortenProfit() ? formatGp(highlightedItem.maxProfit) : String.valueOf(highlightedItem.maxProfit);
+					final String profitText = config.shortenProfit()
+						? formatGp(highlightedItem.maxProfit)
+						: String.valueOf(highlightedItem.maxProfit);
 
 					Dimension profitOffset = config.profitOffset();
 
-					OverlayUtil.renderTextLocation(graphics, new Point(bounds.x + profitOffset.width - fm.stringWidth(profitText), bounds.y + profitOffset.height), profitText, config.profitColor());
+					OverlayUtil.renderTextLocation(graphics, new Point(bounds.x +
+						profitOffset.width - fm.stringWidth(profitText), bounds.y +
+							profitOffset.height), profitText, config.profitColor());
 				}
 			}
 		}
@@ -197,7 +210,8 @@ public class HaggleHelperOverlay extends Overlay
 
 		MenuEntry menuEntry = menuEntries[last];
 		final int itemId = menuEntry.getItemId();
-		if (itemId <= 0 || config.tooltipEnabled() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(itemId))
+		if (itemId <= 0 || config.tooltipEnabled() == OverlayMode.TRACKED && !trackedItemsManager
+			.isTrackedItemId(itemId))
 		{
 			return;
 		}
@@ -208,7 +222,9 @@ public class HaggleHelperOverlay extends Overlay
 			return;
 		}
 
-		InterfaceMode mode = widget.getId() == InterfaceID.Shopmain.ITEMS ? InterfaceMode.SHOP : InterfaceMode.INVENTORY;
+		InterfaceMode mode = widget.getId() == InterfaceID.Shopmain.ITEMS
+			? InterfaceMode.SHOP
+			: InterfaceMode.INVENTORY;
 		if (mode != config.interfaceMode() && config.interfaceMode() != InterfaceMode.BOTH)
 		{
 			return;
@@ -253,18 +269,28 @@ public class HaggleHelperOverlay extends Overlay
 		final int profitThreshold = config.profitThreshold();
 		final int bulkLossAllowance = config.bulkLossAllowance();
 
-		final int loss = profit > profitThreshold && transactionAmount > item.numProfitable ? item.maxProfit - profit : 0;
+		final int loss = profit > profitThreshold && transactionAmount > item.numProfitable
+			? item.maxProfit - profit
+			: 0;
 
-		final String option = transactionAmount != amount ? String.format("%s <col=ff0000>(%d)</col>", menuOption, amount) : menuOption;
+		final String option = transactionAmount != amount
+			? String.format("%s <col=ff0000>(%d)</col>", menuOption, amount)
+			: menuOption;
 
-		final String profitColor = profit <= transactionAmount * profitThreshold ? "ff0000" : "ffff00";
+		final String profitColor = profit <= transactionAmount * profitThreshold
+			? "ff0000"
+			: "ffff00";
 
 		final String lossColor = loss > bulkLossAllowance ? "ff0000" : "ffff00";
 
-		final String lossText = loss > 0 ? String.format("<col=%s>(-%,d gp)</col>", lossColor, loss) : "";
+		final String lossText = loss > 0
+			? String.format("<col=%s>(-%,d gp)</col>", lossColor, loss)
+			: "";
 
 		final String noun = item.mode == InterfaceMode.SHOP ? "cost" : "value";
 
-		tooltipManager.add(new Tooltip(String.format("%s %s: <col=ffff00>%,d gp</col><br>%s profit: <col=%s>%,d gp</col> %s", option, noun, revenue, option, profitColor, profit, lossText)));
+		tooltipManager.add(new Tooltip(String.format(
+			"%s %s: <col=ffff00>%,d gp</col><br>%s profit: <col=%s>%,d gp</col> %s", option, noun,
+			revenue, option, profitColor, profit, lossText)));
 	}
 }

@@ -47,20 +47,22 @@ import net.runelite.client.util.ImageUtil;
 public class HaggleHelperPlugin extends Plugin
 {
 	private static final String SHOPS_RESOURCE = "shops.json";
-	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>(){}.getType();
-	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS =
-		ImmutableMap.<Integer, String>builder()
-			.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
-			.put(InventoryID.MAGICGUILDSHOP_UIM, "Magic Guild Store (Runes and Staves)")
-			.put(InventoryID.MAGICGUILDSHOP_GIM, "Magic Guild Store (Runes and Staves)")
-			.put(InventoryID.MAGICGUILDSHOP2, "Magic Guild Store (Mystic Robes)")
-			.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE, "Magic Guild Store (Mystic Robes)")
-			.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE_TRIMMED, "Magic Guild Store (Mystic Robes)")
-			.put(InventoryID.SKILL_GUIDE_CRAFTING_WEAVING, "Ned's Handmade Rope (100% Wool)")
-			.put(InventoryID.XBOWS_SHOP, "Crossbow Shop (Dwarven Mine)")
-			// .put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
-			.put(InventoryID.XBOWS_SHOP_ADDY, "Crossbow Shop (Keldagrim)")
-			.build();
+	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>()
+	{
+	}.getType();
+	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
+		.<Integer, String>builder()
+		.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
+		.put(InventoryID.MAGICGUILDSHOP_UIM, "Magic Guild Store (Runes and Staves)")
+		.put(InventoryID.MAGICGUILDSHOP_GIM, "Magic Guild Store (Runes and Staves)")
+		.put(InventoryID.MAGICGUILDSHOP2, "Magic Guild Store (Mystic Robes)")
+		.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE, "Magic Guild Store (Mystic Robes)")
+		.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE_TRIMMED, "Magic Guild Store (Mystic Robes)")
+		.put(InventoryID.SKILL_GUIDE_CRAFTING_WEAVING, "Ned's Handmade Rope (100% Wool)")
+		.put(InventoryID.XBOWS_SHOP, "Crossbow Shop (Dwarven Mine)")
+		// .put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
+		.put(InventoryID.XBOWS_SHOP_ADDY, "Crossbow Shop (Keldagrim)")
+		.build();
 
 	public static String VERSION;
 
@@ -103,7 +105,8 @@ public class HaggleHelperPlugin extends Plugin
 
 	private static String getVersion()
 	{
-		try (InputStream in = HaggleHelperPlugin.class.getResourceAsStream("/runelite-plugin.properties"))
+		try (InputStream in = HaggleHelperPlugin.class.getResourceAsStream(
+			"/runelite-plugin.properties"))
 		{
 			if (in == null)
 			{
@@ -179,7 +182,8 @@ public class HaggleHelperPlugin extends Plugin
 
 		panel = injector.getInstance(HaggleHelperPanel.class);
 		panel.init();
-		final BufferedImage icon = ImageUtil.loadImageResource(HaggleHelperPlugin.class, "/icon.png");
+		final BufferedImage icon = ImageUtil.loadImageResource(HaggleHelperPlugin.class,
+			"/icon.png");
 		navButton = NavigationButton.builder()
 			.tooltip("Haggle Helper")
 			.icon(icon)
@@ -224,11 +228,13 @@ public class HaggleHelperPlugin extends Plugin
 	@Subscribe
 	protected void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (event.getContainerId() != InventoryID.INV && client.getWidget(InterfaceID.Shopmain.ITEMS) != null)
+		if (event.getContainerId() != InventoryID.INV && client.getWidget(
+			InterfaceID.Shopmain.ITEMS) != null)
 		{
 			log.debug(
 				"Shop container changed: event={} ItemContainerId={} ContainerId={} items={}",
-				event, event.getItemContainer().getId(), event.getContainerId(), event.getItemContainer().getItems()
+				event, event.getItemContainer().getId(), event.getContainerId(), event
+					.getItemContainer().getItems()
 			);
 
 			if (shop == null)
@@ -262,7 +268,8 @@ public class HaggleHelperPlugin extends Plugin
 		}
 
 		int eventItemId = event.getItemId();
-		if (config.blockUnprofitable() == OverlayMode.TRACKED && !trackedItemsManager.isTrackedItemId(eventItemId))
+		if (config.blockUnprofitable() == OverlayMode.TRACKED && !trackedItemsManager
+			.isTrackedItemId(eventItemId))
 		{
 			return;
 		}
@@ -302,7 +309,9 @@ public class HaggleHelperPlugin extends Plugin
 			client.addChatMessage(
 				ChatMessageType.GAMEMESSAGE,
 				"",
-				String.format("[Haggle Helper]<col=ff0000> Blocked unprofitable transaction:</col> %s %s", menuOption, event.getMenuTarget()),
+				String.format(
+					"[Haggle Helper]<col=ff0000> Blocked unprofitable transaction:</col> %s %s",
+					menuOption, event.getMenuTarget()),
 				null
 			);
 		}

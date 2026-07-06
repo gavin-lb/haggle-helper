@@ -123,8 +123,8 @@ public interface HaggleHelperConfig extends Config
 	@ConfigItem(
 		keyName = "bulkLossAllowance",
 		name = "Bulk loss allowance",
-		description = "The allowed profit loss, in gp, before a bulk transaction is blocked (eg. if less than 10 items"
-			+ " are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)",
+		description = "The allowed profit loss, in gp, before a bulk transaction is blocked (eg. if less than 10 items" +
+			" are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)",
 		position = 7
 	)
 	default int bulkLossAllowance()

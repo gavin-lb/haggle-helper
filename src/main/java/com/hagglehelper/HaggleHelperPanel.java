@@ -58,7 +58,7 @@ public class HaggleHelperPanel extends PluginPanel
 
 	@Inject
 	private ClientThread clientThread;
-	
+
 	private int resolvedItemId = -1;
 	private String resolvedItemName = "";
 
@@ -101,7 +101,9 @@ public class HaggleHelperPanel extends PluginPanel
 		setBorder(new EmptyBorder(8, 8, 8, 8));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JLabel title = new JLabel(String.format("<html><body style = 'color:white'>Haggle Helper <span style = 'color:#a5a5a5'>v%s</span></body></html>", HaggleHelperPlugin.VERSION));
+		JLabel title = new JLabel(String.format(
+			"<html><body style = 'color:white'>Haggle Helper <span style = 'color:#a5a5a5'>v%s</span></body></html>",
+			HaggleHelperPlugin.VERSION));
 		title.setFont(FontManager.getRunescapeBoldFont().deriveFont(Font.BOLD, 16f));
 		title.setForeground(Color.WHITE);
 		title.setBorder(new EmptyBorder(0, 0, 4, 0));
@@ -313,7 +315,8 @@ public class HaggleHelperPanel extends PluginPanel
 
 	void refreshList()
 	{
-		clientThread.invoke(() -> {
+		clientThread.invoke(() ->
+		{
 			TrackedItem[] items = trackedItemsManager.getTrackedItems();
 			SwingUtilities.invokeLater(() ->
 			{
