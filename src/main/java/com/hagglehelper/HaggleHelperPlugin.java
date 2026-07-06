@@ -17,10 +17,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import javax.inject.Inject;
+import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.KeyCode;
+import net.runelite.api.MenuAction;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.WidgetClosed;
@@ -360,6 +365,65 @@ public class HaggleHelperPlugin extends Plugin
 				(String) args[2]
 			)
 		);
+	}
+
+	@Subscribe
+	public void onMenuOpened(MenuOpened event)
+	{
+		if (!config.menuEntry())
+		{
+			return;
+		}
+
+		if (!client.isKeyPressed(KeyCode.KC_SHIFT))
+		{
+			return;
+		}
+
+		for (MenuEntry entry : event.getMenuEntries())
+		{
+			Widget widget = entry.getWidget();
+			if (widget == null)
+			{
+				continue;
+			}
+
+			final int itemId = widget.getItemId();
+			if (itemId == -1)
+			{
+				continue;
+			}
+
+			if (!"Examine".equals(entry.getOption()) || entry.getIdentifier() != 10)
+			{
+				continue;
+			}
+
+			client.getMenu().createMenuEntry(-1)
+				.setOption("Track item")
+				.setTarget(entry.getTarget())
+				.setType(MenuAction.RUNELITE)
+				.onClick(e ->
+				{
+					clientThread.invoke(() ->
+					{
+						TrackedItem item = trackedItemsManager.addItem(itemId);
+						SwingUtilities.invokeLater(panel::refreshList);
+						client.addChatMessage(
+							ChatMessageType.GAMEMESSAGE,
+							"",
+							String.format(
+								"[Haggle Helper] Added tracked item: <col=ff9040><b>%s</b></col> (<col=ffff00>%,d</col> gp)",
+								item.getName(), item.getCost()
+							),
+							null
+						);
+					});
+				});
+
+			// Only add one entry
+			break;
+		}
 	}
 
 	@Provides

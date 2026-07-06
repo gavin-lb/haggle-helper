@@ -72,6 +72,14 @@ public class TrackedItemsManager
 		persist();
 	}
 
+	public TrackedItem addItem(int itemId)
+	{
+		itemId = getUnnotedId(itemId);
+		ItemComposition item = itemManager.getItemComposition(itemId);
+		setCost(itemId, item.getName(), item.getPrice());
+		return getTrackedItem(itemId);
+	}
+
 	public void removeAllItems()
 	{
 		costs.clear();

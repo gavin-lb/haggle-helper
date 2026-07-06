@@ -82,10 +82,21 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "menuEntry",
+		name = "Shift+RMB entry",
+		description = "Add a menu entry to track an item when shift-right-clicking",
+		position = 6
+	)
+	default boolean menuEntry()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "profitThreshold",
 		name = "Profit threshold",
 		description = "The per-item profit margin threshold, in gp, that an item must be exceed to be considered profitable",
-		position = 6
+		position = 7
 	)
 	default int profitThreshold()
 	{
@@ -97,7 +108,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Bulk loss allowance",
 		description = "The allowed profit loss, in gp, before a bulk transaction is blocked (eg. if less than 10 items" +
 			" are profitable the bulk \"Sell 10\" option is only blocked if lost potential profit exceeds allowance)",
-		position = 7
+		position = 8
 	)
 	default int bulkLossAllowance()
 	{
@@ -108,7 +119,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigSection(
 		name = "Overlay - Box",
 		description = "Overlay box display settings",
-		position = 8
+		position = 9
 	)
 	String boxSection = "boxSection";
 
@@ -205,7 +216,7 @@ public interface HaggleHelperConfig extends Config
 		name = "Unprofitable color",
 		description = "Color used for the overlay when item is unprofitable",
 		section = boxSection,
-		position = 9
+		position = 10
 	)
 	default Color unprofitableColor()
 	{
@@ -260,7 +271,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigSection(
 		name = "Overlay - Total Profit",
 		description = "Total potential profit text display settings",
-		position = 10
+		position = 11
 	)
 	String profitSection = "profitSection";
 
@@ -316,7 +327,7 @@ public interface HaggleHelperConfig extends Config
 	@ConfigSection(
 		name = "Overlay - Current Price",
 		description = "Current price overlay display settings",
-		position = 11
+		position = 12
 	)
 	String currentPriceSection = "currentPriceSection";
 
