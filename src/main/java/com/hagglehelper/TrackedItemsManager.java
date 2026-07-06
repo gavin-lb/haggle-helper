@@ -75,8 +75,11 @@ public class TrackedItemsManager
 	public TrackedItem addItem(int itemId)
 	{
 		itemId = getUnnotedId(itemId);
-		ItemComposition item = itemManager.getItemComposition(itemId);
-		setCost(itemId, item.getName(), item.getPrice());
+		setCost(
+			itemId,
+			itemManager.getItemComposition(itemId).getName(),
+			itemManager.getItemPrice(itemId)
+		);
 		return getTrackedItem(itemId);
 	}
 
