@@ -153,7 +153,8 @@ class ShopDataFetcher {
                             return
                         }
 
-                        if (EXPECTED_DUPLICATE_SHOPS.containsKey(shop) && EXPECTED_DUPLICATE_SHOPS[shop].contains(page)) {
+                        if (EXPECTED_DUPLICATE_SHOPS.containsKey(shop)
+                                && EXPECTED_DUPLICATE_SHOPS[shop].contains(page)) {
                             return
                         }
 
@@ -243,7 +244,14 @@ class ShopDataFetcher {
             List<Map<String, Object>> rows = fetchBucket(query)
 
             rows.each { Map<String, Object> row ->
-                String name = (row.page_name_sub ?: row.page_name ?: row.item_name) as String
+                String name
+                if (row.page_name == row.item_name) {
+                    name = row.item_name
+                } else if (row.page_name_sub == row.page_name) {
+                    name = row.page_name
+                } else {
+                    name = row.item_name
+                }
 
                 if (!name) {
                     return
@@ -274,6 +282,13 @@ class ShopDataFetcher {
 
             offset += PAGE_SIZE
         }
+
+        // File file = new File('build/itemIdMap.json')
+        // file.parentFile.mkdirs()
+        // new ObjectMapper()
+        //     .writerWithDefaultPrettyPrinter()
+        //     .writeValue(file, itemIdMap)
+        // println "Wrote ${file.absolutePath}"
 
         return itemIdMap
     }
@@ -310,6 +325,7 @@ class ShopDataFetcher {
             }
             catch (NumberFormatException ignored) {
                 // Skip malformed stock values.
+                /* groovylint-disable-next-line ReturnNullFromCatchBlock */
                 return
             }
 

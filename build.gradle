@@ -120,7 +120,9 @@ tasks.register('generateShopsJson') {
         def file = outputFile.get().asFile
 
         file.parentFile.mkdirs()
-        file.text = new ObjectMapper().writeValueAsString(shops)
+        file.text = new ObjectMapper()
+            // .writerWithDefaultPrettyPrinter()  // uncomment for debugging
+            .writeValueAsString(shops)
 
         println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
     }
