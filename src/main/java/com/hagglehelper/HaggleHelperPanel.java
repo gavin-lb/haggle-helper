@@ -3,6 +3,7 @@ package com.hagglehelper;
 import com.google.inject.Inject;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -12,9 +13,12 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.util.List;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -30,6 +34,7 @@ import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.AsyncBufferedImage;
+import net.runelite.client.util.ImageUtil;
 import net.runelite.http.api.item.ItemPrice;
 
 
@@ -40,6 +45,8 @@ public class HaggleHelperPanel extends PluginPanel
 	private final JTextField searchField = new JTextField();
 	private final JTextField costField = new JTextField();
 	private final JButton addButton = new JButton("Add / Update");
+	private final JButton removeAllButton = new JButton("Remove All");
+	private final JButton updateAllButton = new JButton("Update All");
 	private final JLabel searchFeedbackLabel = new JLabel("");
 	private final JLabel costFeedbackLabel = new JLabel("");
 	private final JPanel listPanel = new JPanel();
@@ -91,6 +98,53 @@ public class HaggleHelperPanel extends PluginPanel
 		searchField.addActionListener(e -> onAddClicked());
 		addButton.addActionListener(e -> onAddClicked());
 		costField.addActionListener(e -> onAddClicked());
+
+		removeAllButton.addActionListener(e ->
+		{
+			int result = JOptionPane.showConfirmDialog(
+				SwingUtilities.getWindowAncestor(this),
+				"Are you sure you want to remove all tracked items?",
+				"Confirm removal",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+			);
+
+			if (result == JOptionPane.YES_OPTION)
+			{
+				clientThread.invoke(() ->
+				{
+					trackedItemsManager.removeAllItems();
+					SwingUtilities.invokeLater(this::refreshList);
+				});
+			}
+		});
+
+		updateAllButton.addActionListener(e ->
+		{
+			int result = JOptionPane.showConfirmDialog(
+				SwingUtilities.getWindowAncestor(this),
+				"Are you sure you want to update the cost of all tracked items?",
+				"Confirm update",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+			);
+
+			if (result == JOptionPane.YES_OPTION)
+			{
+				clientThread.invoke(() ->
+				{
+					for (TrackedItem item : trackedItemsManager.getTrackedItems())
+					{
+						trackedItemsManager.setCost(
+							item.getItemId(),
+							item.getName(),
+							itemManager.getItemPrice(item.getItemId())
+						);
+					}
+					SwingUtilities.invokeLater(this::refreshList);
+				});
+			}
+		});
 	}
 
 	public void init()
@@ -111,11 +165,14 @@ public class HaggleHelperPanel extends PluginPanel
 
 		JPanel centre = new JPanel(new BorderLayout(0, 8));
 		centre.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
 		centre.add(buildAddForm(), BorderLayout.NORTH);
 		centre.add(buildListSection(), BorderLayout.CENTER);
-
 		add(centre, BorderLayout.CENTER);
+
+		JPanel footer = new JPanel(new BorderLayout(0, 8));
+		footer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		footer.add(buildFooter(), BorderLayout.CENTER);
+		add(footer, BorderLayout.SOUTH);
 
 		refreshList();
 		revalidate();
@@ -124,6 +181,31 @@ public class HaggleHelperPanel extends PluginPanel
 
 	public void deinit()
 	{
+	}
+
+	private JPanel buildFooter()
+	{
+		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		panel.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(ColorScheme.MEDIUM_GRAY_COLOR),
+			new EmptyBorder(8, 8, 8, 8))
+		);
+
+		buildButton(removeAllButton, "icons/delete.png");
+		removeAllButton.setToolTipText("Removes all tracked items");
+		buildButton(updateAllButton, "icons/balance.png");
+		updateAllButton.setToolTipText("Updates all costs from current Grand Exchange prices");
+
+		GridBagConstraints gbc = new GridBagConstraints();
+
+		gbc.insets = new Insets(0, 4, 0, 4);
+		panel.add(removeAllButton, gbc);
+
+		gbc.gridx = 1;
+		panel.add(updateAllButton, gbc);
+
+		return panel;
 	}
 
 	private JPanel buildAddForm()
@@ -144,7 +226,7 @@ public class HaggleHelperPanel extends PluginPanel
 		c.gridy = 0;
 		c.gridwidth = 2;
 		c.weightx = 1;
-		JLabel sectionLabel = new JLabel("Add an item");
+		JLabel sectionLabel = new JLabel("Add an item:");
 		sectionLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 		sectionLabel.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
 		panel.add(sectionLabel, c);
@@ -197,14 +279,20 @@ public class HaggleHelperPanel extends PluginPanel
 		// Row 5: add button
 		c.gridy = 5;
 		c.weightx = 1;
-		addButton.setBackground(ColorScheme.BRAND_ORANGE);
-		addButton.setForeground(Color.WHITE);
-		addButton.setFocusPainted(false);
-		addButton.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
-		addButton.setBorder(new EmptyBorder(6, 10, 6, 10));
+		buildButton(addButton, "icons/post_add.png");
 		panel.add(addButton, c);
 
 		return panel;
+	}
+
+	private void buildButton(JButton button, String iconPath)
+	{
+		button.setBackground(ColorScheme.BRAND_ORANGE);
+		button.setForeground(Color.WHITE);
+		button.setFocusPainted(false);
+		button.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
+		button.setBorder(new EmptyBorder(6, 10, 6, 10));
+		button.setIcon(new ImageIcon(ImageUtil.loadImageResource(getClass(), iconPath)));
 	}
 
 	private JScrollPane buildListSection()
@@ -300,17 +388,23 @@ public class HaggleHelperPanel extends PluginPanel
 			return;
 		}
 
-		trackedItemsManager.setCost(resolvedItemId, resolvedItemName, cost);
+		clientThread.invoke(() ->
+		{
+			trackedItemsManager.setCost(resolvedItemId, resolvedItemName, cost);
+			SwingUtilities.invokeLater(() ->
+			{
+				searchFeedbackLabel.setForeground(new Color(0, 200, 80));
+				costFeedbackLabel.setForeground(new Color(0, 200, 80));
+				costFeedbackLabel.setText("");
+				searchField.setText("");
+				costField.setText("");
+				resolvedItemId = -1;
+				resolvedItemName = "";
+				refreshList();
+				SwingUtilities.invokeLater(searchField::requestFocusInWindow);
+			});
+		});
 
-		searchFeedbackLabel.setForeground(new Color(0, 200, 80));
-		costFeedbackLabel.setForeground(new Color(0, 200, 80));
-		costFeedbackLabel.setText("");
-		searchField.setText("");
-		costField.setText("");
-		resolvedItemId = -1;
-		resolvedItemName = "";
-		refreshList();
-		SwingUtilities.invokeLater(searchField::requestFocusInWindow);
 	}
 
 	void refreshList()
@@ -324,10 +418,19 @@ public class HaggleHelperPanel extends PluginPanel
 
 				if (items.length == 0)
 				{
+					JLabel icon = new JLabel(new ImageIcon(
+						ImageUtil.loadImageResource(getClass(), "icons/search_off.png")
+					));
+					icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
 					JLabel empty = new JLabel("No items added yet.");
+					empty.setAlignmentX(Component.CENTER_ALIGNMENT);
 					empty.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
 					empty.setFont(FontManager.getRunescapeSmallFont());
-					empty.setBorder(new EmptyBorder(8, 8, 8, 8));
+
+					listPanel.add(Box.createVerticalStrut(16));
+					listPanel.add(icon);
+					listPanel.add(Box.createVerticalStrut(16));
 					listPanel.add(empty);
 				}
 				else
@@ -388,8 +491,14 @@ public class HaggleHelperPanel extends PluginPanel
 		remove.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		remove.addActionListener(e ->
 		{
-			trackedItemsManager.removeItem(ti.getItemId());
-			refreshList();
+			clientThread.invoke(() ->
+			{
+				trackedItemsManager.removeItem(ti.getItemId());
+				SwingUtilities.invokeLater(() ->
+				{
+					refreshList();
+				});
+			});
 		});
 		row.add(remove, BorderLayout.EAST);
 

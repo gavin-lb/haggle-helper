@@ -23,12 +23,18 @@ import net.runelite.client.game.ItemManager;
 @Singleton
 public class TrackedItemsManager
 {
-	private final Map<Integer, Integer> costs = new HashMap<>();
-	private final Map<Integer, String> names = new LinkedHashMap<>();
 	@Inject
 	private HaggleHelperConfig config;
+
 	@Inject
 	private ItemManager itemManager;
+
+	@Inject
+	private Gson gson;
+
+	private final Map<Integer, Integer> costs = new HashMap<>();
+	private final Map<Integer, String> names = new LinkedHashMap<>();
+
 	private final LoadingCache<Integer, Integer> unnotedIds = CacheBuilder.newBuilder()
 		.maximumSize(10_000)
 		.build(new CacheLoader<>()
@@ -40,8 +46,6 @@ public class TrackedItemsManager
 				return item.getNote() == -1 ? itemId : item.getLinkedNoteId();
 			}
 		});
-	@Inject
-	private Gson gson;
 
 	public int getUnnotedId(int itemId)
 	{
@@ -65,6 +69,13 @@ public class TrackedItemsManager
 		itemId = getUnnotedId(itemId);
 		costs.put(itemId, cost);
 		names.put(itemId, itemName);
+		persist();
+	}
+
+	public void removeAllItems()
+	{
+		costs.clear();
+		names.clear();
 		persist();
 	}
 
