@@ -13,36 +13,8 @@ import net.runelite.client.config.ConfigSection;
 public interface HaggleHelperConfig extends Config
 {
 	String GROUP = "hagglehelper";
-	//#region Overlay box section
-	@ConfigSection(
-		name = "Overlay - Box",
-		description = "Overlay box display settings",
-		position = 8
-	)
-	String boxSection = "boxSection";
-	//#region Number text section
-	@ConfigSection(
-		name = "Overlay - Profitable Amount",
-		description = "Profitable amount text display settings",
-		position = 9
-	)
-	String numberSection = "numberSection";
-	//#region Profit text section
-	@ConfigSection(
-		name = "Overlay - Total Profit",
-		description = "Total potential profit text display settings",
-		position = 10
-	)
-	String profitSection = "profitSection";
-	//#region Current Price section
-	@ConfigSection(
-		name = "Overlay - Current Price",
-		description = "Current price overlay display settings",
-		position = 11
-	)
-	String currentPriceSection = "currentPriceSection";
 
-	//#region root section
+	// #region root section
 	@ConfigItem(
 		keyName = "interfaceMode",
 		name = "Interface mode",
@@ -77,10 +49,21 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "blockUnprofitable",
+		name = "Block unprofitable",
+		description = "Which items to block any unprofitable transactions for (untracked items use their current GE price)",
+		position = 3
+	)
+	default OverlayMode blockUnprofitable()
+	{
+		return OverlayMode.TRACKED;
+	}
+
+	@ConfigItem(
 		keyName = "profitInfoEnabled",
 		name = "Profit info",
 		description = "Whether the profit info panel is enabled",
-		position = 3
+		position = 4
 	)
 	default boolean profitInfoEnabled()
 	{
@@ -91,7 +74,7 @@ public interface HaggleHelperConfig extends Config
 		keyName = "autoCost",
 		name = "Auto cost from GE",
 		description = "Automatically populate cost with the Grand Exchange price when adding an item",
-		position = 4
+		position = 5
 	)
 	default boolean autoCost()
 	{
@@ -102,22 +85,11 @@ public interface HaggleHelperConfig extends Config
 		keyName = "profitThreshold",
 		name = "Profit threshold",
 		description = "The per-item profit margin threshold, in gp, that an item must be exceed to be considered profitable",
-		position = 5
+		position = 6
 	)
 	default int profitThreshold()
 	{
 		return 10;
-	}
-
-	@ConfigItem(
-		keyName = "blockUnprofitable",
-		name = "Block unprofitable",
-		description = "Which items to block any unprofitable transactions for (untracked items use their current GE price)",
-		position = 6
-	)
-	default OverlayMode blockUnprofitable()
-	{
-		return OverlayMode.TRACKED;
 	}
 
 	@ConfigItem(
@@ -131,6 +103,14 @@ public interface HaggleHelperConfig extends Config
 	{
 		return 50;
 	}
+
+	// #region Overlay box section
+	@ConfigSection(
+		name = "Overlay - Box",
+		description = "Overlay box display settings",
+		position = 8
+	)
+	String boxSection = "boxSection";
 
 	@ConfigItem(
 		keyName = "boxOffset",
@@ -232,6 +212,14 @@ public interface HaggleHelperConfig extends Config
 		return new Color(255, 0, 0, 80);
 	}
 
+	// #region Number text section
+	@ConfigSection(
+		name = "Overlay - Profitable Amount",
+		description = "Profitable amount text display settings",
+		position = 9
+	)
+	String numberSection = "numberSection";
+
 	@ConfigItem(
 		keyName = "showNumber",
 		name = "Show",
@@ -267,6 +255,14 @@ public interface HaggleHelperConfig extends Config
 	{
 		return Color.WHITE;
 	}
+
+	// #region Profit text section
+	@ConfigSection(
+		name = "Overlay - Total Profit",
+		description = "Total potential profit text display settings",
+		position = 10
+	)
+	String profitSection = "profitSection";
 
 	@ConfigItem(
 		keyName = "showProfit",
@@ -316,6 +312,14 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
+	// #region Current Price section
+	@ConfigSection(
+		name = "Overlay - Current Price",
+		description = "Current price overlay display settings",
+		position = 11
+	)
+	String currentPriceSection = "currentPriceSection";
+
 	@ConfigItem(
 		keyName = "showCurrentPrice",
 		name = "Show",
@@ -364,7 +368,7 @@ public interface HaggleHelperConfig extends Config
 		return true;
 	}
 
-	//#region Internal
+	// #region Internal
 	@ConfigItem(
 		keyName = "itemPricesJson",
 		name = "Item prices (JSON)",
