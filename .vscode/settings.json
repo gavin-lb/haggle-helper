@@ -2,8 +2,8 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.format.settings.profile": "RuneLite",
-    "java.format.settings.url": "${workspaceFolder}/.vscode/EJC-codestyle.xml",
-    "java.checkstyle.configuration": "${workspaceFolder}/.vscode/checkstyle.xml",
+    "java.format.settings.url": "${workspaceFolder}/config/eclipse-codestyle.xml",
+    "java.checkstyle.configuration": "${workspaceFolder}/config/checkstyle.xml",
     "java.checkstyle.version": "13.7.0",
     "[java]": {
         "editor.insertSpaces": false,
