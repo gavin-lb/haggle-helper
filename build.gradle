@@ -209,12 +209,15 @@ def gitAdd = tasks.register("gitAddVersion", Exec) {
 
 def gitCommit = tasks.register("gitCommitVersion", Exec) {
     dependsOn gitAdd
-    doFirst {
-        commandLine "git", "commit",
-                "gradle.properties",
-                "-m",
-                "chore: update version ${version}"
-    }
+    commandLine "git", "commit",
+            "gradle.properties",
+            "-m",
+            "chore: update version ${version}"
+}
+
+def gitTag = tasks.register("gitTagVersion", Exec) {
+    dependsOn gitCommit
+    commandLine "git", "tag", "v${version}"
 }
 
 Version.ReleaseType.values().each { releaseType ->
@@ -223,6 +226,6 @@ Version.ReleaseType.values().each { releaseType ->
             version.increment(releaseType)
             version.write(file('gradle.properties'))
         }
-        finalizedBy(gitCommit)
+        finalizedBy(gitTag)
     }
 }
