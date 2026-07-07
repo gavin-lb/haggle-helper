@@ -1,7 +1,8 @@
 # Haggle Helper
 
-Helps you haggle with NPC shops to maximize profit. Simply add your items with their costs to the side panel and
-whenever you open a shop instantly see how many items can be sold profitably and for how much profit, automatically
+Helps you haggle with NPC shops to maximize profit. Track your item costs, visualize profitable quantities and total profit, prevent unprofitable sales, see your total profit and profit/hr, and more!
+
+Simply add your items with their costs to the side panel, or by shift-right-clicking, and whenever you open a shop instantly see how many items can be sold profitably and for how much profit, automatically
 accounting for price drops.
 
 ## Features
