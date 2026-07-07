@@ -48,13 +48,10 @@ tasks.named('processResources') {
     dependsOn(tasks.named('generateShopsJson'))
     inputs.property('pluginVersion', pluginVersion.toString())
 
-    filesMatching('runelite-plugin.properties') {
-        expand(version: pluginVersion.toString())
-    }
-
     from(projectDir) {
         include 'runelite-plugin.properties'
         include 'icon.png'
+        include 'shops.json'
     }
 }
 
@@ -191,13 +188,16 @@ class Version {
 }
 
 def gitAdd = tasks.register("gitAddVersion", Exec) {
-    commandLine "git", "add", "gradle.properties"
+    commandLine "git", "add",
+            "gradle.properties",
+            "runelite-plugin.properties"
 }
 
 def gitCommit = tasks.register("gitCommitVersion", Exec) {
     dependsOn gitAdd
     commandLine "git", "commit",
             "gradle.properties",
+            "runelite-plugin.properties",
             "-m",
             "chore: update version ${pluginVersion}"
 }
@@ -212,6 +212,7 @@ Version.ReleaseType.values().each { releaseType ->
         doLast {
             pluginVersion.increment(releaseType)
             pluginVersion.write(file('gradle.properties'))
+            pluginVersion.write(file('runelite-plugin.properties'))
         }
         finalizedBy(gitTag)
     }
