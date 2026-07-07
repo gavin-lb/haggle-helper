@@ -1,4 +1,4 @@
-import com.fasterxml.jackson.databind.ObjectMapper
+import org.json.JSONObject
 import groovy.transform.CompileStatic
 
 import java.util.concurrent.CompletableFuture
@@ -37,7 +37,7 @@ class ShopDataFetcher {
 
     private static String userAgent
 
-    static Map<String, Object> makeShopsJson(String version) {
+    static void writeShopsJson(String version, File file) {
         userAgent = String.format(USER_AGENT_FORMAT, version)
 
         CompletableFuture<Map<String, String>> allShopsFuture = CompletableFuture.supplyAsync {
@@ -72,7 +72,8 @@ class ShopDataFetcher {
 
         println "Built ${shops.size()} shops"
 
-        return shops
+        file.text = new JSONObject(shops).toString()
+        println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
     }
 
     private static List<Map<String, Object>> fetchStoreLines() {
@@ -283,13 +284,6 @@ class ShopDataFetcher {
             offset += PAGE_SIZE
         }
 
-        // File file = new File('build/itemIdMap.json')
-        // file.parentFile.mkdirs()
-        // new ObjectMapper()
-        //     .writerWithDefaultPrettyPrinter()
-        //     .writeValue(file, itemIdMap)
-        // println "Wrote ${file.absolutePath}"
-
         return itemIdMap
     }
 
@@ -356,15 +350,20 @@ class ShopDataFetcher {
         conn.setRequestProperty('User-Agent', userAgent)
         conn.setRequestProperty('Accept', 'application/json')
 
-        Map<String, Object> response = new ObjectMapper().readValue(conn.inputStream.text, Map)
+        JSONObject response = new JSONObject(conn.inputStream.text)
 
-        if (response.error) {
+        if (response.has('error')) {
             throw new IllegalStateException(
-                    "Wiki API error: ${response.error} for query ${encodedQuery}"
+                "Wiki API error: ${response.get('error')} for query ${encodedQuery}"
             )
         }
 
-        return (List<Map<String, Object>>) (response.bucket ?: [])
+        return response.optJSONArray('bucket')
+            ?.toList()
+            ?.collect { Object obj ->
+                (Map<String, Object>) obj
+            }
+            ?: []
     }
 
     private static Integer parseItemId(Object value) {
