@@ -47,12 +47,6 @@ sourceSets {
 tasks.named('processResources') {
     dependsOn(tasks.named('generateShopsJson'))
     inputs.property('pluginVersion', pluginVersion.toString())
-
-    from(projectDir) {
-        include 'runelite-plugin.properties'
-        include 'icon.png'
-        include 'shops.json'
-    }
 }
 
 tasks.withType(JavaCompile).configureEach {
