@@ -38,7 +38,7 @@ or by Shift+RMB in game:
  - **Shop:** Display overlays/tooltips in the shop only
  - **Both:** Display overlays/tooltips in both
 
- <img src="docs/images/interface-mode.gif" width="500">
+ <img src="docs/images/interface-mode.gif" width="450">
 
 
 ### <u>Overlay:</u>
@@ -53,7 +53,7 @@ or by Shift+RMB in game:
  - **Tracked:** Display tooltips for tracked items only
  - **All:** Display tooltips for all items (using GE price for non-tracked)
 
- <img src="docs/images/tooltips.gif" width="500">
+ <img src="docs/images/tooltips.gif" width="450">
 
 ### <u>Block unprofitable:</u>
  - **None:** Do not block unprofitable transactions
