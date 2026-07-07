@@ -190,7 +190,8 @@ class Version {
 def gitAdd = tasks.register("gitAddVersion", Exec) {
     commandLine "git", "add",
             "gradle.properties",
-            "runelite-plugin.properties"
+            "runelite-plugin.properties", 
+            "src/main/resources/com/hagglehelper/gradle.properties"
 }
 
 def gitCommit = tasks.register("gitCommitVersion", Exec) {
@@ -198,6 +199,7 @@ def gitCommit = tasks.register("gitCommitVersion", Exec) {
     commandLine "git", "commit",
             "gradle.properties",
             "runelite-plugin.properties",
+            "src/main/resources/com/hagglehelper/gradle.properties",
             "-m",
             "chore: update version ${pluginVersion}"
 }
@@ -213,6 +215,7 @@ Version.ReleaseType.values().each { releaseType ->
             pluginVersion.increment(releaseType)
             pluginVersion.write(file('gradle.properties'))
             pluginVersion.write(file('runelite-plugin.properties'))
+            pluginVersion.write(file('src/main/resources/com/hagglehelper/gradle.properties'))
         }
         finalizedBy(gitTag)
     }

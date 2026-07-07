@@ -110,12 +110,13 @@ public class HaggleHelperPlugin extends Plugin
 
 	private static String getVersion()
 	{
-		try (InputStream in = HaggleHelperPlugin.class.getResourceAsStream(
-			"/runelite-plugin.properties"))
+		try (InputStream in = HaggleHelperPlugin.class
+			.getClassLoader()
+			.getResourceAsStream("com/hagglehelper/gradle.properties"))
 		{
 			if (in == null)
 			{
-				throw new RuntimeException("runelite-plugin.properties not found");
+				throw new RuntimeException("gradle.properties not found");
 			}
 
 			Properties props = new Properties();
