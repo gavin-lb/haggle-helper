@@ -2,18 +2,11 @@ import java.util.regex.Pattern
 
 plugins {
     id 'java'
-    id 'com.diffplug.spotless' version '5.2.0'
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
-    }
-}
-
-spotless {
-    java {
-        eclipse().configFile('config/eclipse-codestyle.xml')
     }
 }
 
