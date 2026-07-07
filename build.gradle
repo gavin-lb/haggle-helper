@@ -101,13 +101,14 @@ tasks.register('shadowJar', Jar) {
 tasks.register('generateShopsJson') {
     description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
     group = 'build'
+
     inputs.property('pluginVersion', pluginVersion.toString())
 
-    def outputFile = layout.buildDirectory.file('generated-resources/shops.json')
+    def outputFile = layout.projectDirectory.file('src/main/resources/com/hagglehelper/shops.json')
     outputs.file(outputFile)
 
     doLast {
-        def file = outputFile.get().asFile
+        def file = outputFile.asFile
         file.parentFile.mkdirs()
 
         ShopDataFetcher.writeShopsJson(pluginVersion.toString(), file)

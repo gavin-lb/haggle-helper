@@ -51,7 +51,7 @@ import net.runelite.client.util.ImageUtil;
 )
 public class HaggleHelperPlugin extends Plugin
 {
-	private static final String SHOPS_RESOURCE = "shops.json";
+	private static final String SHOPS_RESOURCE = "com/hagglehelper/shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>()
 	{
 	}.getType();
