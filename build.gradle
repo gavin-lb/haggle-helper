@@ -36,7 +36,7 @@ dependencies {
 }
 
 group = 'com.hagglehelper'
-version = new Version(version)
+def pluginVersion = new Version(project.version.toString())
 
 sourceSets {
     main {
@@ -46,10 +46,10 @@ sourceSets {
 
 tasks.named('processResources') {
     dependsOn(tasks.named('generateShopsJson'))
-    inputs.property('pluginVersion', version.toString())
+    inputs.property('pluginVersion', pluginVersion.toString())
 
     filesMatching('runelite-plugin.properties') {
-        expand(version: version.toString())
+        expand(version: pluginVersion.toString())
     }
 
     from(projectDir) {
@@ -94,14 +94,14 @@ tasks.register('shadowJar', Jar) {
 
     group = BasePlugin.BUILD_GROUP
     archiveClassifier.set('shadow')
-    archiveFileName.set("${rootProject.name}-${version}-all.jar")
+    archiveFileName.set("${rootProject.name}-${pluginVersion}-all.jar")
 }
 
 
 tasks.register('generateShopsJson') {
     description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
     group = 'build'
-    inputs.property('pluginVersion', version.toString())
+    inputs.property('pluginVersion', pluginVersion.toString())
 
     def outputFile = layout.buildDirectory.file('generated-resources/shops.json')
     outputs.file(outputFile)
@@ -110,7 +110,7 @@ tasks.register('generateShopsJson') {
         def file = outputFile.get().asFile
         file.parentFile.mkdirs()
 
-        ShopDataFetcher.writeShopsJson(version.toString(), file)
+        ShopDataFetcher.writeShopsJson(pluginVersion.toString(), file)
     }
 }
 
@@ -198,19 +198,19 @@ def gitCommit = tasks.register("gitCommitVersion", Exec) {
     commandLine "git", "commit",
             "gradle.properties",
             "-m",
-            "chore: update version ${version}"
+            "chore: update version ${pluginVersion}"
 }
 
 def gitTag = tasks.register("gitTagVersion", Exec) {
     dependsOn gitCommit
-    commandLine "git", "tag", "v${version}"
+    commandLine "git", "tag", "v${pluginVersion}"
 }
 
 Version.ReleaseType.values().each { releaseType ->
     tasks.register(releaseType.taskName) {
         doLast {
-            version.increment(releaseType)
-            version.write(file('gradle.properties'))
+            pluginVersion.increment(releaseType)
+            pluginVersion.write(file('gradle.properties'))
         }
         finalizedBy(gitTag)
     }
