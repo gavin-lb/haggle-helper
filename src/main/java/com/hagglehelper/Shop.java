@@ -121,7 +121,7 @@ public class Shop
 
 	public int getItemPriceSellTo(int itemId, int itemValue)
 	{
-		return Math.max(getItemPrice(itemId, itemValue, buysAt), SELL_TO_FLOOR);
+		return Math.max(getItemPrice(itemId, itemValue, buysAt), SELL_TO_FLOOR * itemValue / 100);
 	}
 
 	public int getItemPriceBuyFrom(HighlightedItem item)
@@ -131,7 +131,7 @@ public class Shop
 
 	public int getItemPriceBuyFrom(int itemId, int itemValue)
 	{
-		return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR);
+		return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR * itemValue / 100);
 	}
 
 	public int getNumProfitableSellTo(int itemId, int cost, int itemValue)
