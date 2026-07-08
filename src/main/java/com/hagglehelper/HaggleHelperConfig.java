@@ -116,12 +116,12 @@ public interface HaggleHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "priceMismatchPopup",
-		name = "Price mismatch popup",
-		description = "Whether to show a popup with a prompt to open a GitHub issue when there is a price mismatch error",
+		keyName = "errorReports",
+		name = "Error reports",
+		description = "Whether to show a popup error report with a prompt to open a GitHub issue upon an error",
 		position = 8
 	)
-	default boolean priceMismatchPopup()
+	default boolean errorReports()
 	{
 		return true;
 	}
