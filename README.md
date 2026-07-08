@@ -24,11 +24,11 @@ profits.
 ## Tracking Items
 You can track items via the panel:
 
-![alt text](docs/images/panel-tracking.gif)
+<img src="docs/images/panel-tracking.gif">
 
 or by Shift+RMB in game:
 
-![alt text](docs/images/shift-rmb-tracking.gif)
+<img src="docs/images/shift-rmb-tracking.gif">
 
 ## Config options
 
@@ -41,13 +41,12 @@ or by Shift+RMB in game:
 
  <img src="docs/images/interface-mode.gif" width="450">
 
-
 ### <u>Overlay:</u>
  - **None:** Do not display overlays
  - **Tracked:** Display overlays for tracked items only
  - **All:** Display overlays for all items (using GE price for non-tracked)
 
-![item overlays](docs/images/overlay.png)
+ <img src="docs/images/overlay.png">
 
 ### <u>Tooltip:</u>
  - **None:** Do not display tooltips
@@ -63,19 +62,19 @@ or by Shift+RMB in game:
 
 A transaction will be considered unprofitable if: **(1)** the profit is negative, or **(2)** the profit doesn't exceed the *profit threshold* per item, or **(3)** in the case when more than the optimal number of items are being sold, the absolute difference between the profit and the maximum possible profit (ie. the "lost profit") is greater than the *bulk loss allowance* (ie. a loss up to the threshold is tolerated for convenience)
 
-![alt text](docs/images/block-unprofitable.gif)
+ <img src="docs/images/block-unprofitable.gif">
 
 ### <u>Profit info:</u>
 
  - Whether to show the profit info panel:
 
-![profit info](docs/images/profit-info.png)
+ <img src="docs/images/profit-info.png">
 
 ### <u>Auto cost from GE:</u>
 
  - Whether to automatically populate the "Cost (gp):" box with the item's GE price when tracking items via the panel
 
-![auto cost](docs/images/auto-cost.gif)
+ <img src="docs/images/auto-cost.gif">
 
 ### <u>Shift+RMB entry</u>
 
@@ -85,13 +84,14 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
 
  - The per-item profit amount that must be exceeded for an item to be considered profitable, as described in the "Block unprofitable" section above. This value is useful when obtaining items has an inherent opportunity cost or other such associated costs, so selling for only, say, a few gp profit each would be undesirable. 
 
-![profit threshold](docs/images/profit-threshold.gif)
+ <img src="docs/images/profit-threshold.gif">
 
 ### <u>Bulk loss allowance</u>
 
  - The allowed profit loss, as compared to the maximum possible amount, tolerated when performing a bulk transaction. For example, say only 8 are items profitable but the "Sell 10" option is being used: if the absolute difference between the profit from selling 10 and selling 8 is less than the bulk loss allowance, then the transaction will be allowed; if it exceeds the allowance then it will be blocked (assuming block unprofitable is enabled).
 
-![alt text](docs/images/bulk-loss-allowance.gif)
+ <img src="docs/images/bulk-loss-allowance.gif">
+
 
 ## Overlay - Box
 
@@ -112,6 +112,7 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
  - **Sell 5:** the color used when "Sell 5" option is profitable
  - **Sell 1:** the color used when "Sell 1" option is profitable
  - **Unprofitable:** the color used when the item is unprofitable
+
 
 ## Overlay - Profitable Amount
 
