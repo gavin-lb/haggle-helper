@@ -115,6 +115,17 @@ public interface HaggleHelperConfig extends Config
 		return 50;
 	}
 
+	@ConfigItem(
+		keyName = "priceMismatchPopup",
+		name = "Price mismatch popup",
+		description = "Whether to show a popup with a prompt to open a GitHub issue when there is a price mismatch error",
+		position = 8
+	)
+	default boolean priceMismatchPopup()
+	{
+		return true;
+	}
+
 	// #region Overlay box section
 	@ConfigSection(
 		name = "Overlay - Box",
