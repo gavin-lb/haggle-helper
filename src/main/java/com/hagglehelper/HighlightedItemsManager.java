@@ -2,9 +2,12 @@ package com.hagglehelper;
 
 import com.google.inject.Inject;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
+
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.game.ItemManager;
@@ -60,6 +63,22 @@ public class HighlightedItemsManager
 		}
 
 		log.debug("Created new {}-mode item {}", mode, item);
+		return item;
+	}
+
+	public HighlightedItem get(int itemId, InterfaceMode mode) throws NoSuchElementException
+	{
+		int unnotedId = trackedItemsManager.getUnnotedId(itemId);
+
+		HighlightedItem item = items.get(mode).get(unnotedId);
+		if (item == null)
+		{
+			throw new NoSuchElementException(String.format(
+				"Unknown itemId=%d (unnotedId=%d)",
+				itemId, unnotedId
+			));
+		}
+
 		return item;
 	}
 
