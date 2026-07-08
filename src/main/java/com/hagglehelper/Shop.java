@@ -16,9 +16,15 @@ import net.runelite.api.Item;
 @ToString
 public class Shop
 {
+	@ToString.Exclude
 	public final int SELL_TO_FLOOR = 10;
+
+	@ToString.Exclude
 	public final int BUY_FROM_FLOOR = 30;
-	public final Map<Integer, Integer> queue = new HashMap<>();
+
+	@ToString.Exclude
+	@Inject
+	private HaggleHelperConfig config;
 
 	String name;
 	int sellsAt;
@@ -27,9 +33,7 @@ public class Shop
 	Map<Integer, Integer> defaultStocks;
 	Map<Integer, Integer> currentStocks;
 	boolean isGeneral;
-
-	@Inject
-	private HaggleHelperConfig config;
+	final Map<Integer, Integer> queue = new HashMap<>();
 
 	public int getStock(int itemId)
 	{
