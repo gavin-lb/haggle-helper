@@ -1,5 +1,7 @@
-import org.json.JSONObject
 import groovy.transform.CompileStatic
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.core.type.TypeReference
 
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Matcher
@@ -40,14 +42,6 @@ class ShopDataFetcher {
     static void writeShopsJson(String version, File file) {
         userAgent = String.format(USER_AGENT_FORMAT, version)
 
-        CompletableFuture<Map<String, String>> allShopsFuture = CompletableFuture.supplyAsync {
-            fetchAllShops()
-        }
-
-        CompletableFuture<Set<String>> generalStoresFuture = CompletableFuture.supplyAsync {
-            fetchGeneralStores()
-        }
-
         CompletableFuture<List<Map<String, Object>>> storeLinesFuture = CompletableFuture.supplyAsync {
             fetchStoreLines()
         }
@@ -56,14 +50,22 @@ class ShopDataFetcher {
             fetchItemIds()
         }
 
-        Set<String> generalStores = generalStoresFuture.join()
-        println "Fetched ${generalStores.size()} general stores"
+        CompletableFuture<Set<String>> generalStoresFuture = CompletableFuture.supplyAsync {
+            fetchGeneralStores()
+        }
+
+        CompletableFuture<Map<String, String>> allShopsFuture = CompletableFuture.supplyAsync {
+            fetchAllShops()
+        }
 
         List<Map<String, Object>> storeLines = storeLinesFuture.join()
         println "Fetched ${storeLines.size()} storeline rows"
 
         Map<String, Integer> itemIdMap = itemIdsFuture.join()
         println "Resolved ${itemIdMap.size()} item IDs"
+
+        Set<String> generalStores = generalStoresFuture.join()
+        println "Fetched ${generalStores.size()} general stores"
 
         Map<String, String> shopMap = allShopsFuture.join()
         println "Mapped ${shopMap.size()} differing shop names"
@@ -72,7 +74,11 @@ class ShopDataFetcher {
 
         println "Built ${shops.size()} shops"
 
-        file.text = new JSONObject(shops).toString(1)
+        ObjectMapper mapper = new ObjectMapper()
+        mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
+
+        file.text = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shops)
+
         println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
     }
 
@@ -90,7 +96,8 @@ class ShopDataFetcher {
                             "'store_currency'," +
                             "'store_sell_multiplier'," +
                             "'store_buy_multiplier'," +
-                            "'store_delta'" +
+                            "'store_delta'," +
+                            "'store_notes'" +
                             ')' +
                             ".where('store_currency','=','Coins')" +
                             ".where('store_stock','>=','0')" +
@@ -300,7 +307,7 @@ class ShopDataFetcher {
             String pageName = line.sold_by as String
             String itemName = line.sold_item as String
 
-            String shopName = shopMap.getOrDefault(pageName, pageName)
+            String shopName = shopMap.getOrDefault(pageName, pageName) + line.store_notes
 
             if (!shopName || !itemName) {
                 return
@@ -350,20 +357,21 @@ class ShopDataFetcher {
         conn.setRequestProperty('User-Agent', userAgent)
         conn.setRequestProperty('Accept', 'application/json')
 
-        JSONObject response = new JSONObject(conn.inputStream.text)
+        Map<String, Object> response = new ObjectMapper().readValue(
+            conn.inputStream.text,
+            new TypeReference<Map<String, Object>>() { }
+        )
 
-        if (response.has('error')) {
+        if (response.containsKey('error')) {
             throw new IllegalStateException(
-                "Wiki API error: ${response.get('error')} for query ${encodedQuery}"
+                "Wiki API error: ${response.error} for query ${encodedQuery}"
             )
         }
 
-        return response.optJSONArray('bucket')
-            ?.toList()
-            ?.collect { Object obj ->
-                (Map<String, Object>) obj
-            }
-            ?: []
+        List<Map<String, Object>> bucket =
+            (List<Map<String, Object>>) response.get('bucket')
+
+        return bucket ?: []
     }
 
     private static Integer parseItemId(Object value) {
