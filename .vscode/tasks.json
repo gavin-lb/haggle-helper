@@ -24,7 +24,7 @@
       "type": "shell",
       "dependsOn": "Build Shadow JAR",
       "dependsOrder": "sequence",
-      "command": "java.exe -ea -jar \"$(find ./build/libs -name '*-all.jar' | sort -V | tail -n1)\"",
+      "command": "java.exe -ea -jar \"$(find ./build/libs -name '*-all.jar' | sort -V | tail -n1)\" --developer-mode --debug",
       "group": "build",
       "presentation": {
         "close": true
