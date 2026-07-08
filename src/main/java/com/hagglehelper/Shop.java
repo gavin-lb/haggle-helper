@@ -27,6 +27,7 @@ public class Shop
 	private HaggleHelperConfig config;
 
 	String name;
+	int containerId;
 	int sellsAt;
 	int buysAt;
 	float changePer;
@@ -48,8 +49,9 @@ public class Shop
 	}
 
 	@SuppressWarnings("null")
-	public boolean updateStock(Item[] items)
+	public boolean updateStock(Item[] items, int containerId)
 	{
+		this.containerId = containerId;
 		log.debug("Updating items={} on shop={}", items, this);
 		Map<Integer, Integer> newStocks = Arrays.stream(items)
 			.filter(item -> item.getId() > 0)

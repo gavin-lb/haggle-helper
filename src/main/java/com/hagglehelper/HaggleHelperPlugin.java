@@ -234,20 +234,22 @@ public class HaggleHelperPlugin extends Plugin
 	@Subscribe
 	protected void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (event.getContainerId() != InventoryID.INV && client.getWidget(
+		int containerId = event.getContainerId();
+		if (containerId != InventoryID.INV && client.getWidget(
 			InterfaceID.Shopmain.ITEMS) != null)
 		{
 			log.debug(
 				"Shop container changed: event={} ItemContainerId={} ContainerId={} items={}",
-				event, event.getItemContainer().getId(), event.getContainerId(), event
+				event, event.getItemContainer().getId(), containerId, event
 					.getItemContainer().getItems()
 			);
 
 			if (shop == null)
 			{
 				log.error("Shopmain.ITEMS changed with no shop!");
+				return;
 			}
-			else if (shop.updateStock(event.getItemContainer().getItems()))
+			if (shop.updateStock(event.getItemContainer().getItems(), containerId))
 			{
 				highlightedItemsManager.clear();
 			}
