@@ -72,7 +72,7 @@ class ShopDataFetcher {
 
         println "Built ${shops.size()} shops"
 
-        file.text = new JSONObject(shops).toString()
+        file.text = new JSONObject(shops).toString(1)
         println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
     }
 
