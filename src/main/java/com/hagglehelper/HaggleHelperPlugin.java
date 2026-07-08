@@ -80,7 +80,7 @@ public class HaggleHelperPlugin extends Plugin
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
 
-	public static String VERSION;
+	private static String VERSION;
 
 	public Shop shop;
 	public Map<String, Shop> shopsMap = new HashMap<>();
@@ -124,25 +124,30 @@ public class HaggleHelperPlugin extends Plugin
 	private NavigationButton navButton;
 	private Queue<Integer> pendingValueItemIds = new ArrayDeque<>();
 
-	private static String getVersion()
+	public static String getVersion()
 	{
-		try (InputStream in = HaggleHelperPlugin.class
-			.getClassLoader()
-			.getResourceAsStream("com/hagglehelper/gradle.properties"))
+		if (VERSION == null)
 		{
-			if (in == null)
+			try (InputStream in = HaggleHelperPlugin.class
+				.getClassLoader()
+				.getResourceAsStream("com/hagglehelper/gradle.properties"))
 			{
-				throw new RuntimeException("gradle.properties not found");
-			}
+				if (in == null)
+				{
+					throw new RuntimeException("gradle.properties not found");
+				}
 
-			Properties props = new Properties();
-			props.load(in);
-			return props.getProperty("version");
+				Properties props = new Properties();
+				props.load(in);
+				VERSION = props.getProperty("version");
+			}
+			catch (Exception e)
+			{
+				throw new RuntimeException("Failed to load plugin version", e);
+			}
 		}
-		catch (Exception e)
-		{
-			throw new RuntimeException("Failed to load plugin version", e);
-		}
+
+		return VERSION;
 	}
 
 	public static String formatGp(int gp)

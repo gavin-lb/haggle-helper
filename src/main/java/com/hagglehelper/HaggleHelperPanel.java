@@ -166,7 +166,7 @@ public class HaggleHelperPanel extends PluginPanel
 
 		JLabel title = new JLabel(String.format(
 			"<html><body style = 'color:white'>Haggle Helper <span style = 'color:#a5a5a5'>v%s</span></body></html>",
-			HaggleHelperPlugin.VERSION));
+			HaggleHelperPlugin.getVersion()));
 		title.setFont(FontManager.getRunescapeBoldFont().deriveFont(Font.BOLD, 16f));
 		title.setForeground(Color.WHITE);
 		title.setBorder(new EmptyBorder(0, 0, 4, 0));
