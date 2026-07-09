@@ -43,7 +43,24 @@ public class Shop
 	boolean isGeneral;
 	final Map<Integer, Integer> queue = new HashMap<>();
 
-	private int applyDiaryDiscount(int price)
+	// Have to apply Lumbridge Elite manually like this because Jagex messed up the implementation.
+	//
+	// Wiki data is incorrect because the rounding is reversed, eg. 145.6 rounds up to 146
+	// instead of down to 145 like it ought to due to integer division. This is due to the way 
+	// they are calculating the discounted price. Rather than calculating 80% of the normal 
+	// price (ie. setting the sellsAt to 104% from the regular 130%), they first calculate 20% 
+	// of the normal cost, which gets *rounded down* during the integer division, then they 
+	// *subtract* it from the cost; resulting in the final price being effectively *rounded up*.
+	//
+	// For example, "Empty jug pack" has an item value of 140 gp. Hence, the usual 130% sellsAt 
+	// chest sells (full stock) for 140 * 1.3 = 182 gp. However, a 20% discount should result
+	// in a price of 182 * 0.8 = 145.6 or equivalently 140 * 1.04 = 145.6, which should get 
+	// rounded down during integer division to 145 gp. This is the price the wiki lists, but
+	// the price in game is actually 146 gp, because Jagex actually calculates it like this:
+	// 182 * 0.2 = 36.4, which gets rounded down due to integer division to 36, then they 
+	// subtract it to give 182 - 36 = 146 gp, essentially resulting in the final price having
+	// been erroneously rounded up. 
+	private int applyLumbridgeEliteDiscount(int price)
 	{
 		if (lumbridgeElite && name.contains("Culinaromancer"))
 		{
@@ -166,7 +183,7 @@ public class Shop
 		{
 			return FIXED_BUY_FROM_PRICE.get(itemId);
 		}
-		return Math.max(1, applyDiaryDiscount(
+		return Math.max(1, applyLumbridgeEliteDiscount(
 			Math.max(getItemPrice(itemId, itemValue, sellsAt), (sellsAt - 100) * itemValue / 100)
 		));
 	}
@@ -250,7 +267,7 @@ public class Shop
 		{
 			revenue += FIXED_BUY_FROM_PRICE.containsKey(itemId)
 				? FIXED_BUY_FROM_PRICE.get(itemId)
-				: Math.max(1, applyDiaryDiscount(
+				: Math.max(1, applyLumbridgeEliteDiscount(
 					(int) Math.floor(Math.max(pricePercent, sellsAt - 100) * itemValue / 100)
 				));
 		}
