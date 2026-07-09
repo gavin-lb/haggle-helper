@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -156,6 +157,45 @@ public class ErrorPopups
 			dialog.setLocationRelativeTo(client.getCanvas());
 			dialog.setVisible(true);
 		});
+	}
+
+	public void tradeMismatch(Map<Integer, Integer> delta, int expected, int observed)
+	{
+		final String name = "Trade Mismatch";
+
+		final String report = String.format(
+			" - **Type:** %s%n" +
+				"--- %n" +
+				" - **Shop name:** %s%n" +
+				" - **Shop ID:** %s%n" +
+				" - **Shop data:** %s%n" +
+				" - **Inventory delta:** %s%n" +
+				" - **Expected revenue:** %d%n" +
+				" - **Observed revenue:** %d%n",
+			name,
+			plugin.shop.name,
+			plugin.shop.containerId,
+			plugin.shop,
+			delta.keySet().stream().collect(Collectors.toMap(
+				itemId -> String.format(
+					"\"%s\"",
+					itemManager.getItemComposition(itemId).getName()
+				),
+				itemId -> String.format(
+					"Item(quantity=%d, itemId=%d)",
+					delta.get(itemId),
+					itemId
+				)
+			)).toString(),
+			expected,
+			observed
+		);
+
+		final String githubTitle = String.format(
+			"[%s] %s",
+			name, plugin.shop.name
+		);
+		base(report, name, githubTitle);
 	}
 
 	public void priceMismatch(HighlightedItem item, String itemName, int value, int price, String mode)

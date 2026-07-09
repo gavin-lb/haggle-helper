@@ -116,11 +116,15 @@ public class Shop
 		return true;
 	}
 
-	public int getStockDelta(int itemId)
+	public int getStockDelta(int itemId, int currentStock)
 	{
 		int defaultStock = defaultStocks.getOrDefault(itemId, 0);
-		int currentStock = getStock(itemId);
 		return defaultStock - currentStock;
+	}
+
+	public int getStockDelta(int itemId)
+	{
+		return getStockDelta(itemId, getStock(itemId));
 	}
 
 	public int getStockDelta(HighlightedItem item)
@@ -230,12 +234,17 @@ public class Shop
 
 	public int getRevenueBuyFrom(int quantity, int itemId, int itemValue)
 	{
+		return getRevenueBuyFrom(quantity, itemId, itemValue, getStock(itemId));
+	}
+
+	public int getRevenueBuyFrom(int quantity, int itemId, int itemValue, int currentStock)
+	{
 		if (quantity <= 0)
 		{
 			return 0;
 		}
 
-		float pricePercent = sellsAt + changePer * getStockDelta(itemId);
+		float pricePercent = sellsAt + changePer * getStockDelta(itemId, currentStock);
 		int revenue = 0;
 		for (int i = 0; i < quantity; i++, pricePercent += changePer)
 		{
@@ -254,14 +263,19 @@ public class Shop
 		return getRevenueSellTo(quantity, item.id, item.value);
 	}
 
-	private int getRevenueSellTo(int quantity, int itemId, int itemValue)
+	public int getRevenueSellTo(int quantity, int itemId, int itemValue)
+	{
+		return getRevenueSellTo(quantity, itemId, itemValue, getStock(itemId));
+	}
+
+	public int getRevenueSellTo(int quantity, int itemId, int itemValue, int currentStock)
 	{
 		if (quantity <= 0)
 		{
 			return 0;
 		}
 
-		float pricePercent = buysAt + changePer * getStockDelta(itemId);
+		float pricePercent = buysAt + changePer * getStockDelta(itemId, currentStock);
 		int revenue = 0;
 		for (int i = 0; i < quantity; i++, pricePercent -= changePer)
 		{

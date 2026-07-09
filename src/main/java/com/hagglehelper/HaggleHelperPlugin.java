@@ -1,6 +1,7 @@
 package com.hagglehelper;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
@@ -21,6 +22,7 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
@@ -41,6 +43,7 @@ import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.WidgetClosed;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
@@ -141,6 +144,7 @@ public class HaggleHelperPlugin extends Plugin
 
 	public Shop shop;
 	public Map<String, Shop> shopsMap = new HashMap<>();
+	public Map<Integer, Integer> inventoryMap = null;
 
 	@Inject
 	private Client client;
@@ -320,8 +324,74 @@ public class HaggleHelperPlugin extends Plugin
 	protected void onItemContainerChanged(ItemContainerChanged event)
 	{
 		int containerId = event.getContainerId();
-		if (containerId != InventoryID.INV && client.getWidget(
-			InterfaceID.Shopmain.ITEMS) != null)
+		if (containerId == InventoryID.INV)
+		{
+			@SuppressWarnings("null") Map<Integer, Integer> newInventoryMap = Arrays.stream(
+				event.getItemContainer().getItems()
+			)
+				.filter(item -> item.getId() != -1)
+				.collect(Collectors.toMap(
+					item -> trackedItemsManager.getUnnotedId(item.getId()),
+					Item::getQuantity,
+					Integer::sum
+				));
+
+			if (inventoryMap != null)
+			{
+				@SuppressWarnings("null") Map<Integer, Integer> deltaMap = Sets.union(
+					inventoryMap.keySet(),
+					newInventoryMap.keySet()
+				)
+					.stream()
+					.map(id -> Map.entry(
+						id,
+						newInventoryMap.getOrDefault(id, 0) - inventoryMap.getOrDefault(id, 0)
+					))
+					.filter(entry -> entry.getValue() != 0)
+					.collect(
+						Collectors.toMap(
+							Map.Entry::getKey,
+							Map.Entry::getValue
+						)
+					);
+
+				if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null && deltaMap.containsKey(
+					ItemID.COINS))
+				{
+					log.debug("New shop trade delta={}", deltaMap.toString());
+					int coins = deltaMap.remove(ItemID.COINS);
+
+					int revenue = deltaMap.entrySet().stream()
+						.mapToInt(entry ->
+						{
+							int itemId = entry.getKey();
+							int delta = entry.getValue();
+							int stock = shop.getStock(itemId) + delta;
+							int itemValue = itemManager.getItemComposition(itemId).getPrice();
+
+							return delta < 0
+								? shop.getRevenueSellTo(-delta, itemId, itemValue, stock)
+								: -shop.getRevenueBuyFrom(delta, itemId, itemValue, stock);
+						})
+						.sum();
+					log.debug("expected revenue={}, observed revenue={}", revenue, coins);
+					if (revenue != coins)
+					{
+						errorPopups.tradeMismatch(deltaMap, revenue, coins);
+						log.error(
+							"Trade mismatch! delta={}, expected revenue={}, observed revenue={}",
+							deltaMap, revenue, coins
+						);
+					}
+				}
+				else if (!deltaMap.isEmpty())
+				{
+					log.debug("New inventory delta={}", deltaMap.toString());
+				}
+			}
+			inventoryMap = newInventoryMap;
+		}
+		else if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null)
 		{
 			log.debug(
 				"Shop container changed: event={} ItemContainerId={} ContainerId={} items={}",
