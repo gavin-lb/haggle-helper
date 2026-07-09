@@ -28,6 +28,7 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.Item;
 import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
@@ -72,7 +73,7 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.MAGICGUILDSHOP2, "Magic Guild Store (Mystic Robes)")
 		.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE, "Magic Guild Store (Mystic Robes)")
 		.put(InventoryID.MAGICGUILDSHOP2_SKILLCAPE_TRIMMED, "Magic Guild Store (Mystic Robes)")
-		.put(286, "Ned's Handmade Rope (100% Wool)")
+		.put(286, "Ned's Handmade Rope (100% Wool)(Fremennik Isles)")
 		.put(InventoryID.XBOWS_SHOP, "Crossbow Shop (Dwarven Mine)")
 		// .put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
 		.put(InventoryID.XBOWS_SHOP_ADDY, "Crossbow Shop (Keldagrim)")
@@ -265,12 +266,22 @@ public class HaggleHelperPlugin extends Plugin
 					.getItemContainer().getItems()
 			);
 
+			Item[] items = event.getItemContainer().getItems();
 			if (shop == null)
 			{
 				log.error("Shopmain.ITEMS changed with no shop!");
+				if (config.errorReports())
+				{
+					Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
+					if (frame != null)
+					{
+						String shopName = frame.getDynamicChildren()[1].getText();
+						errorPopups.unknownShop(containerId, shopName, items);
+					}
+				}
 				return;
 			}
-			if (shop.updateStock(event.getItemContainer().getItems(), containerId))
+			if (shop.updateStock(items, containerId))
 			{
 				highlightedItemsManager.clear();
 			}

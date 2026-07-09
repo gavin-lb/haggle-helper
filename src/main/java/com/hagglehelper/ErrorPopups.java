@@ -10,6 +10,8 @@ import java.awt.datatransfer.StringSelection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.swing.BorderFactory;
@@ -23,7 +25,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import net.runelite.api.Client;
+import net.runelite.api.Item;
 import net.runelite.client.RuneLiteProperties;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.LinkBrowser;
 
@@ -34,6 +38,9 @@ public class ErrorPopups
 
 	@Inject
 	Client client;
+
+	@Inject
+	ItemManager itemManager;
 
 	private static String BASE_REPORT;
 	private static final String BASE_EXPLANATION = "Please help improve Haggle Helper by reporting this issue " +
@@ -175,8 +182,38 @@ public class ErrorPopups
 		);
 
 		final String githubTitle = String.format(
-			"[Price mismatch] \"%s\" %s \"%s\"",
-			itemName, mode, plugin.shop.name
+			"[%s] \"%s\" %s \"%s\"",
+			name, itemName, mode, plugin.shop.name
+		);
+
+		base(report, name, githubTitle);
+	}
+
+	public void unknownShop(int containerId, String shopName, Item[] items)
+	{
+		final String name = "Unknown Shop";
+
+		final String report = String.format(
+			" - **Type:** %s%n" +
+				"--- %n" +
+				" - **Shop name:** %s%n" +
+				" - **Shop ID:** %d%n" +
+				" - **Items:** %s%n",
+			name,
+			shopName,
+			containerId,
+			Arrays.stream(items).collect(Collectors.toMap(
+				item -> String.format(
+					"\"%s\"",
+					itemManager.getItemComposition(item.getId()).getName()
+				),
+				item -> item.toString()
+			)));
+
+
+		final String githubTitle = String.format(
+			"[%s] \"%s\"",
+			name, shopName
 		);
 
 		base(report, name, githubTitle);
