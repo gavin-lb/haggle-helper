@@ -447,6 +447,7 @@ public class HaggleHelperPlugin extends Plugin
 		{
 			log.debug("Shop closed");
 			highlightedItemsManager.clear();
+			pendingValueItemIds.clear();
 			shop.queue.clear();
 			shop = null;
 		}
