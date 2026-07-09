@@ -133,6 +133,8 @@ public class HaggleHelperPlugin extends Plugin
 
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
+	private static final Pattern VALUE_FAIL = Pattern.compile(
+		"You can't sell this.*");
 
 	private static String VERSION;
 
@@ -543,48 +545,50 @@ public class HaggleHelperPlugin extends Plugin
 
 		String message = Text.removeTags(event.getMessage());
 		Matcher matcher = VALUE_PATTERN.matcher(message);
-		if (!matcher.matches())
+		if (matcher.matches())
 		{
-			return;
-		}
+			int itemId = pendingValueItemIds.poll();
+			String itemName = matcher.group(1);
+			int value = Integer.parseInt(matcher.group(3).replace(",", ""));
 
-		int itemId = pendingValueItemIds.poll();
-		String itemName = matcher.group(1);
-		int value = Integer.parseInt(matcher.group(3).replace(",", ""));
-
-		int price;
-		String mode;
-		switch (matcher.group(2))
-		{
-			case "currently costs":
-				price = shop.getItemPriceBuyFrom(
-					highlightedItemsManager.get(itemId, InterfaceMode.SHOP)
-				);
-				mode = "buying from";
-				log.debug("Shop sells {} for {} (calculated price={})", itemName, value, price);
-				break;
-
-			case "shop will buy for":
-				price = shop.getItemPriceSellTo(
-					highlightedItemsManager.get(itemId, InterfaceMode.INVENTORY)
-				);
-				mode = "selling to";
-				log.debug("Shop buys {} for {} (calculated price={})", itemName, value, price);
-				break;
-
-			default:
-				return;
-		}
-
-		if (price != value)
-		{
-			log.error("Price & value mismatched! itemId={} price={} value={} shop={}",
-				itemId, price, value, shop);
-
-			if (config.errorReports())
+			int price;
+			String mode;
+			switch (matcher.group(2))
 			{
-				errorPopups.priceMismatch(itemName, itemId, value, price, mode);
+				case "currently costs":
+					price = shop.getItemPriceBuyFrom(
+						highlightedItemsManager.get(itemId, InterfaceMode.SHOP)
+					);
+					mode = "buying from";
+					log.debug("Shop sells {} for {} (calculated price={})", itemName, value, price);
+					break;
+
+				case "shop will buy for":
+					price = shop.getItemPriceSellTo(
+						highlightedItemsManager.get(itemId, InterfaceMode.INVENTORY)
+					);
+					mode = "selling to";
+					log.debug("Shop buys {} for {} (calculated price={})", itemName, value, price);
+					break;
+
+				default:
+					return;
 			}
+
+			if (price != value)
+			{
+				log.error("Price & value mismatched! itemId={} price={} value={} shop={}",
+					itemId, price, value, shop);
+
+				if (config.errorReports())
+				{
+					errorPopups.priceMismatch(itemName, itemId, value, price, mode);
+				}
+			}
+		}
+		else if (VALUE_FAIL.matcher(message).matches())
+		{
+			pendingValueItemIds.poll();
 		}
 	}
 
