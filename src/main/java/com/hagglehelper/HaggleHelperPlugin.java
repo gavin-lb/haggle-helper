@@ -124,7 +124,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Diango's Toy Store
 	// TODO: Karamja gloves discounts
 	// TODO: Baba Yaga's Magic Shop after Lunar diplomacy
 	// TODO: Raetul and Co's Cloth Store after Contact!

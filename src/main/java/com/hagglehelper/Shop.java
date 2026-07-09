@@ -1,5 +1,6 @@
 package com.hagglehelper;
 
+import com.google.common.collect.ImmutableMap;
 import com.hagglehelper.HaggleHelperConfig.InterfaceMode;
 import java.awt.Color;
 import java.util.Arrays;
@@ -16,16 +17,21 @@ import net.runelite.api.Item;
 @ToString
 public class Shop
 {
-	@ToString.Exclude
-	private final int SELL_TO_FLOOR = 10;
-
-	@ToString.Exclude
-	private final int BUY_FROM_FLOOR = 30;
+	private static final int SELL_TO_FLOOR = 10;
+	private static final int BUY_FROM_FLOOR = 30;
+	private static final Map<Integer, Integer> FIXED_BUY_FROM_PRICE = ImmutableMap
+		.<Integer, Integer>builder()
+		.put(981, 21000)
+		.put(21354, 1)
+		.put(11705, 75)
+		.put(11706, 75)
+		.build();
 
 	@ToString.Exclude
 	@Inject
 	private HaggleHelperConfig config;
 
+	@ToString.Exclude
 	private boolean lumbridgeElite;
 
 	String name;
@@ -153,6 +159,10 @@ public class Shop
 
 	public int getItemPriceBuyFrom(int itemId, int itemValue)
 	{
+		if (FIXED_BUY_FROM_PRICE.containsKey(itemId))
+		{
+			return FIXED_BUY_FROM_PRICE.get(itemId);
+		}
 		return applyDiaryDiscount(
 			Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR * itemValue / 100)
 		);
@@ -172,6 +182,11 @@ public class Shop
 
 	public int getNumProfitableBuyFrom(int itemId, int cost, int itemValue)
 	{
+		if (FIXED_BUY_FROM_PRICE.containsKey(itemId))
+		{
+			return 0;
+		}
+
 		int lumbModifier = lumbridgeElite && name.contains("Culinaromancer")
 			? 20
 			: 0;
@@ -225,9 +240,11 @@ public class Shop
 		int revenue = 0;
 		for (int i = 0; i < quantity; i++, pricePercent += changePer)
 		{
-			revenue += applyDiaryDiscount(
-				(int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100)
-			);
+			revenue += FIXED_BUY_FROM_PRICE.containsKey(itemId)
+				? FIXED_BUY_FROM_PRICE.get(itemId)
+				: applyDiaryDiscount(
+					(int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100)
+				);
 		}
 
 		return revenue;
