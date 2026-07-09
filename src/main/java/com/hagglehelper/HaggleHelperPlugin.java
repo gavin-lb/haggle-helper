@@ -48,6 +48,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.OverlayMenuClicked;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -170,6 +171,9 @@ public class HaggleHelperPlugin extends Plugin
 
 	@Inject
 	private TrackedItemsManager trackedItemsManager;
+
+	@Inject
+	private ItemManager itemManager;
 
 	@Inject
 	private ClientThread clientThread;
@@ -550,24 +554,34 @@ public class HaggleHelperPlugin extends Plugin
 		{
 			int itemId = pendingValueItemIds.poll();
 			String itemName = matcher.group(1);
+
+			if (!itemManager.getItemComposition(itemId).getName().equals(itemName))
+			{
+				log.error(
+					"Item name mismatched while handling value chat message, itemId={} itemName={}",
+					itemId, itemName
+				);
+				pendingValueItemIds.clear();
+				return;
+			}
+
 			int value = Integer.parseInt(matcher.group(3).replace(",", ""));
 
+			HighlightedItem item;
 			int price;
 			String mode;
 			switch (matcher.group(2))
 			{
 				case "currently costs":
-					price = shop.getItemPriceBuyFrom(
-						highlightedItemsManager.get(itemId, InterfaceMode.SHOP)
-					);
+					item = highlightedItemsManager.get(itemId, InterfaceMode.SHOP);
+					price = shop.getItemPriceBuyFrom(item);
 					mode = "buying from";
 					log.debug("Shop sells {} for {} (calculated price={})", itemName, value, price);
 					break;
 
 				case "shop will buy for":
-					price = shop.getItemPriceSellTo(
-						highlightedItemsManager.get(itemId, InterfaceMode.INVENTORY)
-					);
+					item = highlightedItemsManager.get(itemId, InterfaceMode.INVENTORY);
+					price = shop.getItemPriceSellTo(item);
 					mode = "selling to";
 					log.debug("Shop buys {} for {} (calculated price={})", itemName, value, price);
 					break;
@@ -583,7 +597,7 @@ public class HaggleHelperPlugin extends Plugin
 
 				if (config.errorReports())
 				{
-					errorPopups.priceMismatch(itemName, itemId, value, price, mode);
+					errorPopups.priceMismatch(item, itemName, value, price, mode);
 				}
 			}
 		}

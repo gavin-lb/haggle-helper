@@ -22,8 +22,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.client.RuneLiteProperties;
@@ -31,6 +33,7 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.util.LinkBrowser;
 
+@Slf4j
 public class ErrorPopups
 {
 	@Inject
@@ -155,10 +158,11 @@ public class ErrorPopups
 		});
 	}
 
-	public void priceMismatch(String itemName, int itemId, int value, int price, String mode)
+	public void priceMismatch(HighlightedItem item, String itemName, int value, int price, String mode)
 	{
 		final String name = "Price Mismatch";
 
+		final int stock = plugin.shop.getStock(item.id);
 		final String report = String.format(
 			" - **Type:** %s%n" +
 				"--- %n" +
@@ -172,11 +176,11 @@ public class ErrorPopups
 				" - **Observed value:** %d%n",
 			name,
 			itemName,
-			itemId,
+			item.id,
 			plugin.shop.name,
 			plugin.shop.containerId,
 			mode,
-			plugin.shop.currentStocks.get(itemId),
+			stock,
 			price,
 			value
 		);
@@ -186,7 +190,24 @@ public class ErrorPopups
 			name, itemName, mode, plugin.shop.name
 		);
 
-		base(report, name, githubTitle);
+		// Check if stock is unchanged after short delay to not false positive when value + sell is spammed
+		Timer timer = new Timer(100, e ->
+		{
+			int newStock = plugin.shop.getStock(item.id);
+			if (newStock == stock)
+			{
+				base(report, name, githubTitle);
+			}
+			else
+			{
+				log.debug(
+					"Stock changed - cancelling price mismatch error popup, oldStock={} newStock={}",
+					stock, newStock
+				);
+			}
+		});
+		timer.setRepeats(false);
+		timer.start();
 	}
 
 	public void unknownShop(int containerId, String shopName, Item[] items)
