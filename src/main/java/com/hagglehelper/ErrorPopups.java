@@ -35,39 +35,28 @@ public class ErrorPopups
 	@Inject
 	Client client;
 
-	public void priceMismatch(String itemName, int itemId, int value, int price, String mode)
+	private static String BASE_REPORT;
+	private static final String BASE_EXPLANATION = "Please help improve Haggle Helper by reporting this issue " +
+		"on GitHub with the \"Open GitHub Issue\" button below. Alternatively, you can click \"Copy " +
+		"Report\" and paste it into a new GitHub issue manually.";
+	private static final String FOOTER = "(This popup can be disabled with the \"Error reports\" config option)";
+
+	ErrorPopups()
 	{
-		final String report = String.format(
+		BASE_REPORT = String.format(
 			"## Haggle Helper Bug Report%n%n" +
-				" - **Type:** Price mismatch%n" +
 				" - **RuneLite version:** %s%n" +
-				" - **Plugin version:** %s%n" +
-				"--- %n" +
-				" - **Item name:** %s%n" +
-				" - **Item ID:** %d%n" +
-				" - **Shop name:** %s%n" +
-				" - **Shop ID:** %d%n" +
-				" - **Mode:** %s%n" +
-				" - **Current stock:** %d%n" +
-				" - **Expected price:** %d%n" +
-				" - **Observed value:** %d%n",
+				" - **Plugin version:** %s%n",
 			RuneLiteProperties.getVersion(),
-			HaggleHelperPlugin.VERSION,
-			itemName,
-			itemId,
-			plugin.shop.name,
-			plugin.shop.containerId,
-			mode,
-			plugin.shop.currentStocks.get(itemId),
-			price,
-			value
+			HaggleHelperPlugin.getVersion()
 		);
+	}
 
-		final String explanation = "Haggle Helper has detected a price mismatch!\n\n" +
-			"Please help improve Haggle Helper by reporting this issue on GitHub with the \"Open GitHub Issue\" button below. " +
-			"Alternatively, you can click \"Copy Report\" and paste it into a new GitHub issue manually.";
-
-		final String footer = "(This popup can be disabled with the \"Error reports\" config option)";
+	private void base(String extraReport, String name, String githubTitle)
+	{
+		final String report = BASE_REPORT + extraReport;
+		final String explanation = "Haggle Helper has detected a " + name + "!\n\n" +
+			BASE_EXPLANATION;
 
 		SwingUtilities.invokeLater(() ->
 		{
@@ -87,7 +76,7 @@ public class ErrorPopups
 			reportArea.setWrapStyleWord(true);
 			reportArea.setFocusable(true);
 
-			JTextArea footerArea = new JTextArea(footer);
+			JTextArea footerArea = new JTextArea(FOOTER);
 			footerArea.setEditable(false);
 			footerArea.setOpaque(false);
 			footerArea.setLineWrap(true);
@@ -95,7 +84,7 @@ public class ErrorPopups
 			footerArea.setFocusable(false);
 			footerArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 20, 10));
 
-			JDialog dialog = new JDialog((Frame) null, "Haggle Helper - Price Mismatch", false);
+			JDialog dialog = new JDialog((Frame) null, "Haggle Helper - " + name, false);
 
 			JButton copyButton = new JButton("Copy Report");
 			copyButton.addActionListener(e ->
@@ -107,8 +96,7 @@ public class ErrorPopups
 
 			String issueUrl = "https://github.com/gavin-lb/haggle-helper/issues/new" +
 				"?title=" + URLEncoder.encode(
-					String.format("[Price mismatch] \"%s\" %s \"%s\"", itemName, mode,
-						plugin.shop.name),
+					githubTitle,
 					StandardCharsets.UTF_8
 				) +
 				"&body=" + URLEncoder.encode(
@@ -158,5 +146,39 @@ public class ErrorPopups
 			dialog.setLocationRelativeTo(client.getCanvas());
 			dialog.setVisible(true);
 		});
+	}
+
+	public void priceMismatch(String itemName, int itemId, int value, int price, String mode)
+	{
+		final String name = "Price Mismatch";
+
+		final String report = String.format(
+			" - **Type:** %s%n" +
+				"--- %n" +
+				" - **Item name:** %s%n" +
+				" - **Item ID:** %d%n" +
+				" - **Shop name:** %s%n" +
+				" - **Shop ID:** %d%n" +
+				" - **Mode:** %s%n" +
+				" - **Current stock:** %d%n" +
+				" - **Expected price:** %d%n" +
+				" - **Observed value:** %d%n",
+			name,
+			itemName,
+			itemId,
+			plugin.shop.name,
+			plugin.shop.containerId,
+			mode,
+			plugin.shop.currentStocks.get(itemId),
+			price,
+			value
+		);
+
+		final String githubTitle = String.format(
+			"[Price mismatch] \"%s\" %s \"%s\"",
+			itemName, mode, plugin.shop.name
+		);
+
+		base(report, name, githubTitle);
 	}
 }
