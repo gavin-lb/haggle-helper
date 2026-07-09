@@ -123,6 +123,15 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_UIM, "Culinaromancer's Chest(food, full)")
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
+
+	// TODO: Diango's Toy Store
+	// TODO: Karamja gloves discounts
+	// TODO: Baba Yaga's Magic Shop after Lunar diplomacy
+	// TODO: Raetul and Co's Cloth Store after Contact!
+	// TODO: Battle Runes after Enter the Abyss miniquest
+	// TODO: Ali's Discount Wares. 
+	// TODO: White Knight Armoury ???
+
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
 
