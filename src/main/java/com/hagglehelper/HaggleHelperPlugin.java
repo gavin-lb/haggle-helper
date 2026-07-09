@@ -18,9 +18,11 @@ import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
+import java.util.function.BooleanSupplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -71,6 +74,20 @@ import net.runelite.client.util.Text;
 )
 public class HaggleHelperPlugin extends Plugin
 {
+	@RequiredArgsConstructor
+	private static final class ShopOverride
+	{
+		private final Map<String, String> shops;
+		private final BooleanSupplier enabled;
+
+		String apply(String shopName)
+		{
+			return shops.containsKey(shopName) && enabled.getAsBoolean()
+				? shops.get(shopName)
+				: shopName;
+		}
+	}
+
 	private static final String SHOPS_RESOURCE = "com/hagglehelper/shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>()
 	{
@@ -225,6 +242,28 @@ public class HaggleHelperPlugin extends Plugin
 
 	private NavigationButton navButton;
 	private Queue<Integer> pendingValueItemIds = new ArrayDeque<>();
+	private final List<ShopOverride> shopOverrides = List.of(
+		new ShopOverride(
+			KARAMJA_EASY_SHOPS,
+			() -> KARAMJA_EASY_GLOVES.contains(getGlovesItemId())
+		),
+		new ShopOverride(
+			KARAMJA_HARD_SHOPS,
+			() -> KARAMJA_HARD_GLOVES.contains(getGlovesItemId())
+		),
+		new ShopOverride(
+			LUNAR_DIPLOMACY_SHOPS,
+			() -> Quest.LUNAR_DIPLOMACY.getState(client) == QuestState.FINISHED
+		),
+		new ShopOverride(
+			CONTACT_SHOPS,
+			() -> Quest.CONTACT.getState(client) == QuestState.FINISHED
+		),
+		new ShopOverride(
+			ENTER_THE_ABYSS_SHOPS,
+			() -> Quest.ENTER_THE_ABYSS.getState(client) == QuestState.FINISHED
+		)
+	);
 
 	public static String getVersion()
 	{
@@ -281,33 +320,9 @@ public class HaggleHelperPlugin extends Plugin
 
 	private Shop getShop(String shopName)
 	{
-		if (KARAMJA_EASY_SHOPS.containsKey(shopName) && KARAMJA_EASY_GLOVES.contains(
-			getGlovesItemId()))
+		for (ShopOverride override : shopOverrides)
 		{
-			shopName = KARAMJA_EASY_SHOPS.get(shopName);
-		}
-		if (KARAMJA_HARD_SHOPS.containsKey(shopName) && KARAMJA_HARD_GLOVES.contains(
-			getGlovesItemId()))
-		{
-			shopName = KARAMJA_HARD_SHOPS.get(shopName);
-		}
-
-		if (LUNAR_DIPLOMACY_SHOPS.containsKey(shopName) && Quest.LUNAR_DIPLOMACY.getState(
-			client) == QuestState.FINISHED)
-		{
-			shopName = LUNAR_DIPLOMACY_SHOPS.get(shopName);
-		}
-
-		if (CONTACT_SHOPS.containsKey(shopName) && Quest.CONTACT.getState(
-			client) == QuestState.FINISHED)
-		{
-			shopName = CONTACT_SHOPS.get(shopName);
-		}
-
-		if (ENTER_THE_ABYSS_SHOPS.containsKey(shopName) && Quest.ENTER_THE_ABYSS.getState(
-			client) == QuestState.FINISHED)
-		{
-			shopName = ENTER_THE_ABYSS_SHOPS.get(shopName);
+			shopName = override.apply(shopName);
 		}
 
 		Shop foundShop = shopsMap.get(shopName);
