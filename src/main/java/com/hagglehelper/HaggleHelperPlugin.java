@@ -77,6 +77,10 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.XBOWS_SHOP, "Crossbow Shop (Dwarven Mine)")
 		// .put(InventoryID.XBOWS_SHOP,"Crossbow Shop (White Wolf Mountain)")
 		.put(InventoryID.XBOWS_SHOP_ADDY, "Crossbow Shop (Keldagrim)")
+		.put(InventoryID.BAKERY, "Ardougne Baker's Stall.(west)")
+		.put(InventoryID.BAKERY2, "Ardougne Baker's Stall.(east)")
+		.put(InventoryID.MM_SCIMITAR_SHOP, "Daga's Scimitar Smithy")
+		.put(InventoryID.MM_SCIMITAR_SHOP2, "Daga's Scimitar Smithy(Monkey Madness I)")
 		.build();
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");

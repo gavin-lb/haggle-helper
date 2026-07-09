@@ -1942,7 +1942,7 @@
     "isGeneral" : false,
     "sellsAt" : 100
   },
-  "Daga's Scimitar SmithyMonkey Madness I" : {
+  "Daga's Scimitar Smithy(Monkey Madness I)" : {
     "buysAt" : 50,
     "changePer" : 2.0,
     "defaultStocks" : {
