@@ -17,14 +17,16 @@ import net.runelite.api.Item;
 public class Shop
 {
 	@ToString.Exclude
-	public final int SELL_TO_FLOOR = 10;
+	private final int SELL_TO_FLOOR = 10;
 
 	@ToString.Exclude
-	public final int BUY_FROM_FLOOR = 30;
+	private final int BUY_FROM_FLOOR = 30;
 
 	@ToString.Exclude
 	@Inject
 	private HaggleHelperConfig config;
+
+	private boolean lumbridgeElite;
 
 	String name;
 	int containerId;
@@ -35,6 +37,20 @@ public class Shop
 	Map<Integer, Integer> currentStocks;
 	boolean isGeneral;
 	final Map<Integer, Integer> queue = new HashMap<>();
+
+	private int applyDiaryDiscount(int price)
+	{
+		if (lumbridgeElite && name.contains("Culinaromancer"))
+		{
+			price -= price * 20 / 100;
+		}
+		return price;
+	}
+
+	public void setLumbridgeElite(boolean value)
+	{
+		lumbridgeElite = value;
+	}
 
 	public int getStock(int itemId)
 	{
@@ -137,7 +153,9 @@ public class Shop
 
 	public int getItemPriceBuyFrom(int itemId, int itemValue)
 	{
-		return Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR * itemValue / 100);
+		return applyDiaryDiscount(
+			Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR * itemValue / 100)
+		);
 	}
 
 	public int getNumProfitableSellTo(int itemId, int cost, int itemValue)
@@ -154,8 +172,12 @@ public class Shop
 
 	public int getNumProfitableBuyFrom(int itemId, int cost, int itemValue)
 	{
+		int lumbModifier = lumbridgeElite && name.contains("Culinaromancer")
+			? 20
+			: 0;
+
 		float percent = 100f * (cost - config.profitThreshold()) / itemValue;
-		float num = (percent - sellsAt) / changePer;
+		float num = (percent - sellsAt + lumbModifier) / changePer;
 		int adjustedNum = Math.max(0, (int) Math.ceil(num) - getStockDelta(itemId));
 		return Math.min(getStock(itemId), adjustedNum);
 	}
@@ -203,7 +225,9 @@ public class Shop
 		int revenue = 0;
 		for (int i = 0; i < quantity; i++, pricePercent += changePer)
 		{
-			revenue += (int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100);
+			revenue += applyDiaryDiscount(
+				(int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100)
+			);
 		}
 
 		return revenue;

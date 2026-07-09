@@ -32,6 +32,7 @@ import net.runelite.api.Item;
 import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.Varbits;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuOpened;
@@ -81,6 +82,46 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.BAKERY2, "Ardougne Baker's Stall.(east)")
 		.put(InventoryID.MM_SCIMITAR_SHOP, "Daga's Scimitar Smithy")
 		.put(InventoryID.MM_SCIMITAR_SHOP2, "Daga's Scimitar Smithy(Monkey Madness I)")
+		.put(InventoryID.HUNDRED_FOODCHEST1, "Culinaromancer's Chest(food, 0 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST2, "Culinaromancer's Chest(food, 1 Subquest)")
+		.put(InventoryID.HUNDRED_FOODCHEST3, "Culinaromancer's Chest(food, 2 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST4, "Culinaromancer's Chest(food, 3 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST5, "Culinaromancer's Chest(food, 4 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST6, "Culinaromancer's Chest(food, 5 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST7, "Culinaromancer's Chest(food, 6 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST8, "Culinaromancer's Chest(food, 7 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST9, "Culinaromancer's Chest(food, 8 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST10, "Culinaromancer's Chest(food, full)")
+		.put(InventoryID.HUNDRED_REWARDCHEST1, "Culinaromancer's Chest(0 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST2, "Culinaromancer's Chest(1 Subquest)")
+		.put(InventoryID.HUNDRED_REWARDCHEST3, "Culinaromancer's Chest(2 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST4, "Culinaromancer's Chest(3 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST5, "Culinaromancer's Chest(4 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST6, "Culinaromancer's Chest(5 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST7, "Culinaromancer's Chest(6 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST8, "Culinaromancer's Chest(7 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST9, "Culinaromancer's Chest(8 Subquests)")
+		.put(InventoryID.HUNDRED_REWARDCHEST10, "Culinaromancer's Chest(full)")
+		.put(InventoryID.HUNDRED_FOODCHEST1_UIM, "Culinaromancer's Chest(food, 0 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST1_GIM, "Culinaromancer's Chest(food, 0 Subquest)")
+		.put(InventoryID.HUNDRED_FOODCHEST2_UIM, "Culinaromancer's Chest(food, 1 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST2_GIM, "Culinaromancer's Chest(food, 1 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST3_UIM, "Culinaromancer's Chest(food, 2 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST3_GIM, "Culinaromancer's Chest(food, 2 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST4_UIM, "Culinaromancer's Chest(food, 3 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST4_GIM, "Culinaromancer's Chest(food, 3 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST5_UIM, "Culinaromancer's Chest(food, 4 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST5_GIM, "Culinaromancer's Chest(food, 4 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST6_UIM, "Culinaromancer's Chest(food, 5 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST6_GIM, "Culinaromancer's Chest(food, 5 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST7_UIM, "Culinaromancer's Chest(food, 6 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST7_GIM, "Culinaromancer's Chest(food, 6 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST8_UIM, "Culinaromancer's Chest(food, 7 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST8_GIM, "Culinaromancer's Chest(food, 7 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST9_UIM, "Culinaromancer's Chest(food, 8 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST9_GIM, "Culinaromancer's Chest(food, 8 Subquests)")
+		.put(InventoryID.HUNDRED_FOODCHEST10_UIM, "Culinaromancer's Chest(food, full)")
+		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
@@ -178,6 +219,10 @@ public class HaggleHelperPlugin extends Plugin
 				String.format("No shop found with shopName='%s'", shopName)
 			);
 		}
+
+		foundShop.setLumbridgeElite(
+			client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1
+		);
 
 		injector.injectMembers(foundShop);
 		log.debug("Found shop={}", foundShop);
