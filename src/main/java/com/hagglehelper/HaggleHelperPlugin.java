@@ -36,6 +36,8 @@ import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.PlayerComposition;
+import net.runelite.api.Quest;
+import net.runelite.api.QuestState;
 import net.runelite.api.Varbits;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemContainerChanged;
@@ -98,6 +100,10 @@ public class HaggleHelperPlugin extends Plugin
 		13103
 	);
 
+	private static final Map<String, String> LUNAR_DIPLOMACY_SHOPS = ImmutableMap.of(
+		"Baba Yaga's Magic Shop.", "Baba Yaga's Magic Shop.(post-quest)"
+	);
+
 	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
 		.<Integer, String>builder()
 		.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
@@ -156,7 +162,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Baba Yaga's Magic Shop after Lunar diplomacy
 	// TODO: Raetul and Co's Cloth Store after Contact!
 	// TODO: Battle Runes after Enter the Abyss miniquest
 	// TODO: Ali's Discount Wares. 
@@ -279,6 +284,12 @@ public class HaggleHelperPlugin extends Plugin
 			getGlovesItemId()))
 		{
 			shopName = KARAMJA_HARD_SHOPS.get(shopName);
+		}
+
+		if (LUNAR_DIPLOMACY_SHOPS.containsKey(shopName) && Quest.LUNAR_DIPLOMACY.getState(
+			client) == QuestState.FINISHED)
+		{
+			shopName = LUNAR_DIPLOMACY_SHOPS.get(shopName);
 		}
 
 		Shop foundShop = shopsMap.get(shopName);
