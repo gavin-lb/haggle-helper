@@ -108,6 +108,10 @@ public class HaggleHelperPlugin extends Plugin
 		"Raetul and Co's Cloth Store.", "Raetul and Co's Cloth Store.(after Contact!)"
 	);
 
+	private static final Map<String, String> ENTER_THE_ABYSS_SHOPS = ImmutableMap.of(
+		"Battle Runes", "Battle Runes(Enter the Abyss)"
+	);
+
 	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
 		.<Integer, String>builder()
 		.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
@@ -166,7 +170,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Battle Runes after Enter the Abyss miniquest
 	// TODO: Ali's Discount Wares. 
 	// TODO: White Knight Armoury ???
 
@@ -299,6 +302,12 @@ public class HaggleHelperPlugin extends Plugin
 			client) == QuestState.FINISHED)
 		{
 			shopName = CONTACT_SHOPS.get(shopName);
+		}
+
+		if (ENTER_THE_ABYSS_SHOPS.containsKey(shopName) && Quest.ENTER_THE_ABYSS.getState(
+			client) == QuestState.FINISHED)
+		{
+			shopName = ENTER_THE_ABYSS_SHOPS.get(shopName);
 		}
 
 		Shop foundShop = shopsMap.get(shopName);
