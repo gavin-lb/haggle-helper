@@ -2355,7 +2355,7 @@
   },
   "Durrik's Goods" : {
     "buysAt" : 15,
-    "changePer" : 0.8,
+    "changePer" : 2.0,
     "defaultStocks" : {
       "1269" : 4,
       "1347" : 1,
