@@ -93,15 +93,14 @@ tasks.register('generateShopsJson') {
     description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
     group = 'build'
 
-    inputs.property('pluginVersion', pluginVersion.toString())
-
-    def outputFile = layout.projectDirectory.file('src/main/resources/com/hagglehelper/shops.json')
-    outputs.file(outputFile)
+    outputs.upToDateWhen { false }
 
     doLast {
-        def file = outputFile.asFile
-        file.parentFile.mkdirs()
+        def file = layout.projectDirectory.file(
+            'src/main/resources/com/hagglehelper/shops.json'
+        ).asFile
 
+        file.parentFile.mkdirs()
         ShopDataFetcher.writeShopsJson(pluginVersion.toString(), file)
     }
 }
