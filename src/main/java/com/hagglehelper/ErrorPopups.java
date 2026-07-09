@@ -46,6 +46,7 @@ public class ErrorPopups
 	@Inject
 	ItemManager itemManager;
 
+	private static final String GITHUB_ISSUE_URL = "https://github.com/gavin-lb/haggle-helper/issues/new";
 	private static String BASE_REPORT;
 	private static final String BASE_EXPLANATION = "Please help improve Haggle Helper by reporting this issue " +
 		"on GitHub with the \"Open GitHub Issue\" button below. Alternatively, you can click \"Copy " +
@@ -105,7 +106,7 @@ public class ErrorPopups
 				dialog.dispose();
 			});
 
-			String issueUrl = "https://github.com/gavin-lb/haggle-helper/issues/new" +
+			String issueUrl = GITHUB_ISSUE_URL +
 				"?title=" + URLEncoder.encode(
 					githubTitle,
 					StandardCharsets.UTF_8
