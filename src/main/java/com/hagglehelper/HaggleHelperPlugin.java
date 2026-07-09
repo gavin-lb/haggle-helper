@@ -101,10 +101,10 @@ public class HaggleHelperPlugin extends Plugin
 		.put("Tamayu's Spear Stall ", "Tamayu's Spear Stall(Karamja gloves)")
 		.build();
 	private static final ImmutableSet<Integer> KARAMJA_EASY_GLOVES = ImmutableSet.of(
-		11136,
-		11138,
-		11140,
-		13103
+		ItemID.ATJUN_GLOVES_EASY,
+		ItemID.ATJUN_GLOVES_MED,
+		ItemID.ATJUN_GLOVES_HARD,
+		ItemID.ATJUN_GLOVES_ELITE
 	);
 
 	private static final Map<String, String> KARAMJA_HARD_SHOPS = ImmutableMap
@@ -113,8 +113,8 @@ public class HaggleHelperPlugin extends Plugin
 		.put("Jiminua's Jungle Store.", "Jiminua's Jungle Store.(Karamja gloves 3+)")
 		.build();
 	private static final ImmutableSet<Integer> KARAMJA_HARD_GLOVES = ImmutableSet.of(
-		11140,
-		13103
+		ItemID.ATJUN_GLOVES_HARD,
+		ItemID.ATJUN_GLOVES_ELITE
 	);
 
 	private static final Map<String, String> LUNAR_DIPLOMACY_SHOPS = ImmutableMap.of(
