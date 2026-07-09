@@ -104,6 +104,10 @@ public class HaggleHelperPlugin extends Plugin
 		"Baba Yaga's Magic Shop.", "Baba Yaga's Magic Shop.(post-quest)"
 	);
 
+	private static final Map<String, String> CONTACT_SHOPS = ImmutableMap.of(
+		"Raetul and Co's Cloth Store.", "Raetul and Co's Cloth Store.(after Contact!)"
+	);
+
 	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
 		.<Integer, String>builder()
 		.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
@@ -162,7 +166,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Raetul and Co's Cloth Store after Contact!
 	// TODO: Battle Runes after Enter the Abyss miniquest
 	// TODO: Ali's Discount Wares. 
 	// TODO: White Knight Armoury ???
@@ -290,6 +293,12 @@ public class HaggleHelperPlugin extends Plugin
 			client) == QuestState.FINISHED)
 		{
 			shopName = LUNAR_DIPLOMACY_SHOPS.get(shopName);
+		}
+
+		if (CONTACT_SHOPS.containsKey(shopName) && Quest.CONTACT.getState(
+			client) == QuestState.FINISHED)
+		{
+			shopName = CONTACT_SHOPS.get(shopName);
 		}
 
 		Shop foundShop = shopsMap.get(shopName);
