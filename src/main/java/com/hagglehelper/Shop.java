@@ -18,7 +18,6 @@ import net.runelite.api.Item;
 public class Shop
 {
 	private static final int SELL_TO_FLOOR = 10;
-	private static final int BUY_FROM_FLOOR = 30;
 	private static final Map<Integer, Integer> FIXED_BUY_FROM_PRICE = ImmutableMap
 		.<Integer, Integer>builder()
 		.put(981, 21000)
@@ -163,9 +162,9 @@ public class Shop
 		{
 			return FIXED_BUY_FROM_PRICE.get(itemId);
 		}
-		return applyDiaryDiscount(
-			Math.max(getItemPrice(itemId, itemValue, sellsAt), BUY_FROM_FLOOR * itemValue / 100)
-		);
+		return Math.max(1, applyDiaryDiscount(
+			Math.max(getItemPrice(itemId, itemValue, sellsAt), (sellsAt - 100) * itemValue / 100)
+		));
 	}
 
 	public int getNumProfitableSellTo(int itemId, int cost, int itemValue)
@@ -242,9 +241,9 @@ public class Shop
 		{
 			revenue += FIXED_BUY_FROM_PRICE.containsKey(itemId)
 				? FIXED_BUY_FROM_PRICE.get(itemId)
-				: applyDiaryDiscount(
-					(int) Math.floor(Math.max(pricePercent, BUY_FROM_FLOOR) * itemValue / 100)
-				);
+				: Math.max(1, applyDiaryDiscount(
+					(int) Math.floor(Math.max(pricePercent, sellsAt - 100) * itemValue / 100)
+				));
 		}
 
 		return revenue;
