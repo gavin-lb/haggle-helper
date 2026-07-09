@@ -1,6 +1,7 @@
 package com.hagglehelper;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -34,6 +35,7 @@ import net.runelite.api.Item;
 import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
+import net.runelite.api.PlayerComposition;
 import net.runelite.api.Varbits;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemContainerChanged;
@@ -45,6 +47,7 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarClientID;
+import net.runelite.api.kit.KitType;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -70,6 +73,31 @@ public class HaggleHelperPlugin extends Plugin
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>()
 	{
 	}.getType();
+
+	private static final Map<String, String> KARAMJA_EASY_SHOPS = ImmutableMap
+		.<String, String>builder()
+		.put("Davon's Amulet Store.", "Davon's Amulet Store.(Karamja gloves)")
+		.put("Fernahei's Fishing Hut.", "Fernahei's Fishing Hut.(Karamja gloves)")
+		.put("Obli's General Store.", "Obli's General Store.(Karamja gloves)")
+		.put("Tamayu's Spear Stall ", "Tamayu's Spear Stall(Karamja gloves)")
+		.build();
+	private static final ImmutableSet<Integer> KARAMJA_EASY_GLOVES = ImmutableSet.of(
+		11136,
+		11138,
+		11140,
+		13103
+	);
+
+	private static final Map<String, String> KARAMJA_HARD_SHOPS = ImmutableMap
+		.<String, String>builder()
+		.put("Karamja General Store", "Karamja General Store(Karamja gloves)")
+		.put("Jiminua's Jungle Store.", "Jiminua's Jungle Store.(Karamja gloves 3+)")
+		.build();
+	private static final ImmutableSet<Integer> KARAMJA_HARD_GLOVES = ImmutableSet.of(
+		11140,
+		13103
+	);
+
 	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
 		.<Integer, String>builder()
 		.put(InventoryID.MAGICGUILDSHOP, "Magic Guild Store (Runes and Staves)")
@@ -128,7 +156,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Karamja gloves discounts
 	// TODO: Baba Yaga's Magic Shop after Lunar diplomacy
 	// TODO: Raetul and Co's Cloth Store after Contact!
 	// TODO: Battle Runes after Enter the Abyss miniquest
@@ -227,8 +254,33 @@ public class HaggleHelperPlugin extends Plugin
 		return String.format("%,d", gp);
 	}
 
+	private Integer getGlovesItemId()
+	{
+		PlayerComposition composition = client.getLocalPlayer().getPlayerComposition();
+		if (composition != null)
+		{
+			int gloves = composition.getEquipmentIds()[KitType.HANDS.getIndex()];
+			if (gloves >= PlayerComposition.ITEM_OFFSET)
+			{
+				return gloves - PlayerComposition.ITEM_OFFSET;
+			}
+		}
+		return null;
+	}
+
 	private Shop getShop(String shopName)
 	{
+		if (KARAMJA_EASY_SHOPS.containsKey(shopName) && KARAMJA_EASY_GLOVES.contains(
+			getGlovesItemId()))
+		{
+			shopName = KARAMJA_EASY_SHOPS.get(shopName);
+		}
+		if (KARAMJA_HARD_SHOPS.containsKey(shopName) && KARAMJA_HARD_GLOVES.contains(
+			getGlovesItemId()))
+		{
+			shopName = KARAMJA_HARD_SHOPS.get(shopName);
+		}
+
 		Shop foundShop = shopsMap.get(shopName);
 
 		if (foundShop == null)
@@ -238,9 +290,7 @@ public class HaggleHelperPlugin extends Plugin
 			);
 		}
 
-		foundShop.setLumbridgeElite(
-			client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1
-		);
+		foundShop.setLumbridgeElite(client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1);
 
 		injector.injectMembers(foundShop);
 		log.debug("Found shop={}", foundShop);
