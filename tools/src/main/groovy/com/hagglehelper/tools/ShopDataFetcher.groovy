@@ -1,3 +1,5 @@
+package com.hagglehelper.tools
+
 import groovy.transform.CompileStatic
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -12,6 +14,16 @@ import java.util.regex.Matcher
  */
 @CompileStatic
 class ShopDataFetcher {
+
+    static void main(String[] args) {
+        if (args.length != 2) {
+            throw new IllegalArgumentException(
+                'Usage: ShopDataFetcher <version> <output-file>'
+            )
+        }
+
+        writeShopsJson(args[0], new File(args[1]))
+    }
 
     static final String WIKI_BASE = 'https://oldschool.runescape.wiki/api.php?action=bucket&format=json'
     static final String USER_AGENT_FORMAT = 'HaggleHelper/%s (gradle build task)'

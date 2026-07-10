@@ -1,1 +1,2 @@
-rootProject.name = 'haggle-helper'
+rootProject.name = "haggle-helper"
+include("tools")

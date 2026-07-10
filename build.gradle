@@ -45,7 +45,7 @@ sourceSets {
 }
 
 tasks.named('processResources') {
-    dependsOn(tasks.named('generateShopsJson'))
+    dependsOn(':tools:run')
     inputs.property('pluginVersion', pluginVersion.toString())
 }
 
@@ -86,23 +86,6 @@ tasks.register('shadowJar', Jar) {
     group = BasePlugin.BUILD_GROUP
     archiveClassifier.set('shadow')
     archiveFileName.set("${rootProject.name}-${pluginVersion}-all.jar")
-}
-
-
-tasks.register('generateShopsJson') {
-    description = 'Fetches shop data from the OSRS Wiki and writes shops.json'
-    group = 'build'
-
-    outputs.upToDateWhen { false }
-
-    doLast {
-        def file = layout.projectDirectory.file(
-            'src/main/resources/com/hagglehelper/shops.json'
-        ).asFile
-
-        file.parentFile.mkdirs()
-        ShopDataFetcher.writeShopsJson(pluginVersion.toString(), file)
-    }
 }
 
 class Version {

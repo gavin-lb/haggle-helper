@@ -1,0 +1,27 @@
+plugins {
+    id 'groovy'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation localGroovy()
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.20.0"
+}
+
+application {
+    mainClass = "com.hagglehelper.tools.ShopDataFetcher"
+}
+
+tasks.named("run", JavaExec) {
+    args(
+        project.version.toString(),
+        rootProject.layout.projectDirectory
+            .file("src/main/resources/com/hagglehelper/shops.json")
+            .asFile
+            .absolutePath
+    )
+}
