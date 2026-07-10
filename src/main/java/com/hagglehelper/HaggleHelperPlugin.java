@@ -203,6 +203,10 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
+	// TODO: fix bug when trying to sell to full shop
+	// TODO: fix bug lingering overlay for empty item slot
+	// TODO: fix bug Trade Mismatch false positive when stock changes
+
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
 	private static final Pattern VALUE_FAIL = Pattern.compile(
