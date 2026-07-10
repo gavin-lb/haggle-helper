@@ -145,6 +145,16 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.BAKERY2, "Ardougne Baker's Stall.(east)")
 		.put(InventoryID.MM_SCIMITAR_SHOP, "Daga's Scimitar Smithy")
 		.put(InventoryID.MM_SCIMITAR_SHOP2, "Daga's Scimitar Smithy(Monkey Madness I)")
+		.put(InventoryID.FEUD_MORRISANES, "Ali's Discount Wares.(general)")
+		.put(InventoryID.ROGUETRADER_ALIM_RUNERETAIL_INV, "Ali's Discount Wares.(Elemental runes)")
+		.put(InventoryID.ROGUETRADER_ALIM_RUNEWHOLESALE_INV,
+			"Ali's Discount Wares.(Catalytic runes)")
+		.put(InventoryID.ROGUETRADER_ALIM_DEFENDBJ_INV,
+			"Ali's Discount Wares.(Defensive blackjacks)")
+		.put(InventoryID.ROGUETRADER_ALIM_ASSAULTBJ_INV,
+			"Ali's Discount Wares.(Offensive blackjacks)")
+		.put(InventoryID.ROGUETRADER_ALIM_MEANPCLOTHES_INV, "Ali's Discount Wares.(menaphite gear)")
+		.put(InventoryID.ROGUETRADER_ALIM_CARPETCLOTHES_INV, "Ali's Discount Wares.(desert gear)")
 		.put(InventoryID.HUNDRED_FOODCHEST1, "Culinaromancer's Chest(food, 0 Subquests)")
 		.put(InventoryID.HUNDRED_FOODCHEST2, "Culinaromancer's Chest(food, 1 Subquest)")
 		.put(InventoryID.HUNDRED_FOODCHEST3, "Culinaromancer's Chest(food, 2 Subquests)")
@@ -187,7 +197,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
-	// TODO: Ali's Discount Wares. 
 	// TODO: White Knight Armoury ???
 
 	private static final Pattern VALUE_PATTERN = Pattern.compile(

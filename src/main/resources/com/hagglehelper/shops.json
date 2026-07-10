@@ -146,18 +146,63 @@
     "isGeneral" : false,
     "sellsAt" : 120
   },
-  "Ali's Discount Wares.(blackjacks)" : {
+  "Ali's Discount Wares.(Catalytic runes)" : {
+    "buysAt" : 50,
+    "changePer" : 0.0,
+    "defaultStocks" : {
+      "12736" : 5,
+      "12738" : 5,
+      "558" : 100,
+      "559" : 100,
+      "560" : 100,
+      "561" : 100,
+      "562" : 100,
+      "563" : 100,
+      "564" : 10,
+      "565" : 100,
+      "566" : 100
+    },
+    "isGeneral" : false,
+    "sellsAt" : 125
+  },
+  "Ali's Discount Wares.(Defensive blackjacks)" : {
+    "buysAt" : 55,
+    "changePer" : 1.0,
+    "defaultStocks" : {
+      "4600" : 25,
+      "6410" : 25,
+      "6414" : 25,
+      "6416" : 25,
+      "6420" : 25
+    },
+    "isGeneral" : false,
+    "sellsAt" : 100
+  },
+  "Ali's Discount Wares.(Elemental runes)" : {
+    "buysAt" : 50,
+    "changePer" : 0.0,
+    "defaultStocks" : {
+      "12728" : 3,
+      "12730" : 3,
+      "12732" : 3,
+      "12734" : 3,
+      "554" : 20,
+      "555" : 20,
+      "556" : 20,
+      "557" : 20
+    },
+    "isGeneral" : false,
+    "sellsAt" : 130
+  },
+  "Ali's Discount Wares.(Offensive blackjacks)" : {
     "buysAt" : 55,
     "changePer" : 1.0,
     "defaultStocks" : {
       "4600" : 25,
       "6408" : 25,
-      "6410" : 25,
       "6412" : 25,
-      "6414" : 25,
       "6416" : 25,
-      "6418" : 25,
-      "6420" : 25
+      "6418" : 25
     },
     "isGeneral" : false,
     "sellsAt" : 100
@@ -213,33 +258,6 @@
     },
     "isGeneral" : false,
     "sellsAt" : 100
-  },
-  "Ali's Discount Wares.(runes)" : {
-    "buysAt" : 50,
-    "changePer" : 0.0,
-    "defaultStocks" : {
-      "12728" : 3,
-      "12730" : 3,
-      "12732" : 3,
-      "12734" : 3,
-      "12736" : 5,
-      "12738" : 5,
-      "554" : 20,
-      "555" : 20,
-      "556" : 20,
-      "557" : 20,
-      "558" : 100,
-      "559" : 100,
-      "560" : 100,
-      "561" : 100,
-      "562" : 100,
-      "563" : 100,
-      "564" : 10,
-      "565" : 100,
-      "566" : 100
-    },
-    "isGeneral" : false,
-    "sellsAt" : 130
   },
   "Alice's Farming shop." : {
     "buysAt" : 70,

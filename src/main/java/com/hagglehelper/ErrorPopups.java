@@ -26,9 +26,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
 
+import com.google.common.collect.ImmutableSet;
+
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.RuneLiteProperties;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
@@ -52,6 +55,13 @@ public class ErrorPopups
 		"on GitHub with the \"Open GitHub Issue\" button below. Alternatively, you can click \"Copy " +
 		"Report\" and paste it into a new GitHub issue manually.";
 	private static final String FOOTER = "(This popup can be disabled with the \"Error reports\" config option)";
+	private static final ImmutableSet<Integer> ALI_JUNK = ImmutableSet.of(
+		ItemID.BRONZE_PICKAXE,
+		ItemID.BUCKET_EMPTY,
+		ItemID.KNIFE,
+		ItemID.RAW_CHICKEN,
+		ItemID.TINDERBOX
+	);
 
 	ErrorPopups()
 	{
@@ -162,6 +172,16 @@ public class ErrorPopups
 
 	public void tradeMismatch(Map<Integer, Integer> delta, int expected, int observed)
 	{
+		// Ali Morrisane will forcibly sell the player random junk 
+		// See: https://oldschool.runescape.wiki/w/Ali%27s_Discount_Wares.#Junk
+		if (plugin.shop.name.contains("Ali's Discount Wares.(general)") &&
+			observed == -10 && delta.size() == 1 &&
+			ALI_JUNK.contains(delta.keySet().iterator().next()))
+		{
+			log.debug("Ali's random junk, ignoring trade mismatch");
+			return;
+		}
+
 		final String name = "Trade Mismatch";
 
 		final String report = String.format(
