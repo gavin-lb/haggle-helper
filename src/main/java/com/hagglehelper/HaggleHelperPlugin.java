@@ -155,6 +155,12 @@ public class HaggleHelperPlugin extends Plugin
 			"Ali's Discount Wares.(Offensive blackjacks)")
 		.put(InventoryID.ROGUETRADER_ALIM_MEANPCLOTHES_INV, "Ali's Discount Wares.(menaphite gear)")
 		.put(InventoryID.ROGUETRADER_ALIM_CARPETCLOTHES_INV, "Ali's Discount Wares.(desert gear)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY1, "White Knight Armoury(Novice)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY2, "White Knight Armoury(Peon)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY3, "White Knight Armoury(Page)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY4, "White Knight Armoury(Noble)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY5, "White Knight Armoury(Adept)")
+		.put(InventoryID.WHITEKNIGHT_ARMOURY6, "White Knight Armoury(Master)")
 		.put(InventoryID.HUNDRED_FOODCHEST1, "Culinaromancer's Chest(food, 0 Subquests)")
 		.put(InventoryID.HUNDRED_FOODCHEST2, "Culinaromancer's Chest(food, 1 Subquest)")
 		.put(InventoryID.HUNDRED_FOODCHEST3, "Culinaromancer's Chest(food, 2 Subquests)")
@@ -196,8 +202,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_UIM, "Culinaromancer's Chest(food, full)")
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
-
-	// TODO: White Knight Armoury ???
 
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
