@@ -7,6 +7,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 
 import java.util.concurrent.CompletableFuture
 import java.util.regex.Matcher
+import java.nio.file.Path
+import java.nio.file.Files
+import java.nio.charset.StandardCharsets
 
 /**
  * Fetches shop and item stock data from the Old School RuneScape Wiki bucket API
@@ -22,7 +25,7 @@ class ShopDataFetcher {
             )
         }
 
-        writeShopsJson(args[0], new File(args[1]))
+        writeShopsJson(args[0], Path.of(args[1]))
     }
 
     static final String WIKI_BASE = 'https://oldschool.runescape.wiki/api.php?action=bucket&format=json'
@@ -51,7 +54,7 @@ class ShopDataFetcher {
 
     private static String userAgent
 
-    static void writeShopsJson(String version, File file) {
+    static void writeShopsJson(String version, Path file) {
         userAgent = String.format(USER_AGENT_FORMAT, version)
 
         CompletableFuture<List<Map<String, Object>>> storeLinesFuture = CompletableFuture.supplyAsync {
@@ -89,9 +92,11 @@ class ShopDataFetcher {
         ObjectMapper mapper = new ObjectMapper()
         mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 
-        file.text = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shops)
+        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(shops)
 
-        println String.format('Written to %s (%.2f KiB)', file.path, file.length() / 1024.0)
+        Files.writeString(file, json, StandardCharsets.UTF_8)
+
+        println "Written to ${file} (${String.format('%.2f', Files.size(file) / 1024.0)} KiB)"
     }
 
     private static List<Map<String, Object>> fetchStoreLines() {
