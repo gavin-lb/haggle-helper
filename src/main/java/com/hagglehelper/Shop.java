@@ -28,13 +28,14 @@ public class Shop
 
 	@ToString.Exclude
 	@Inject
-	private HaggleHelperConfig config;
+	private transient HaggleHelperConfig config;
 
 	@ToString.Exclude
-	public Map<Integer, Integer> inventoryMap = null;
+	@Inject
+	private transient Map<Integer, Integer> inventoryMap;
 
 	@ToString.Exclude
-	private boolean lumbridgeElite;
+	private transient boolean lumbridgeElite;
 
 	String name;
 	int containerId;

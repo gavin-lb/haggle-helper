@@ -279,6 +279,8 @@ public class HaggleHelperPlugin extends Plugin
 		)
 	);
 
+	public Map<Integer, Integer> inventoryMap = null;
+
 	public static String getVersion()
 	{
 		if (VERSION == null)
@@ -406,10 +408,13 @@ public class HaggleHelperPlugin extends Plugin
 	@Override
 	protected void shutDown() throws Exception
 	{
-		panel.deinit();
-		clientToolbar.removeNavigation(navButton);
-		panel = null;
-		navButton = null;
+		if (panel != null)
+		{
+			panel.deinit();
+			clientToolbar.removeNavigation(navButton);
+			panel = null;
+			navButton = null;
+		}
 
 		overlayManager.remove(inventoryOverlay);
 		overlayManager.remove(overlayPanel);
@@ -444,16 +449,16 @@ public class HaggleHelperPlugin extends Plugin
 					Integer::sum
 				));
 
-			if (shop.inventoryMap != null)
+			if (inventoryMap != null)
 			{
 				@SuppressWarnings("null") Map<Integer, Integer> deltaMap = Sets.union(
-					shop.inventoryMap.keySet(),
+					inventoryMap.keySet(),
 					newInventoryMap.keySet()
 				)
 					.stream()
 					.map(id -> Map.entry(
 						id,
-						newInventoryMap.getOrDefault(id, 0) - shop.inventoryMap.getOrDefault(id, 0)
+						newInventoryMap.getOrDefault(id, 0) - inventoryMap.getOrDefault(id, 0)
 					))
 					.filter(entry -> entry.getValue() != 0)
 					.collect(
@@ -512,7 +517,7 @@ public class HaggleHelperPlugin extends Plugin
 					log.debug("New inventory delta={}", deltaMap.toString());
 				}
 			}
-			shop.inventoryMap = newInventoryMap;
+			inventoryMap = newInventoryMap;
 		}
 		else if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null)
 		{
@@ -798,6 +803,12 @@ public class HaggleHelperPlugin extends Plugin
 		{
 			pendingValueItemIds.poll();
 		}
+	}
+
+	@Provides
+	Map<Integer, Integer> provideInventoryMap()
+	{
+		return inventoryMap;
 	}
 
 	@Provides
