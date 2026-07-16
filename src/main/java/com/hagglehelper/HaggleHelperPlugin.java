@@ -215,7 +215,6 @@ public class HaggleHelperPlugin extends Plugin
 
 	public Shop shop;
 	public Map<String, Shop> shopsMap = new HashMap<>();
-	public Map<Integer, Integer> inventoryMap = null;
 
 	@Inject
 	private Client client;
@@ -446,16 +445,16 @@ public class HaggleHelperPlugin extends Plugin
 					Integer::sum
 				));
 
-			if (inventoryMap != null)
+			if (shop.inventoryMap != null)
 			{
 				@SuppressWarnings("null") Map<Integer, Integer> deltaMap = Sets.union(
-					inventoryMap.keySet(),
+					shop.inventoryMap.keySet(),
 					newInventoryMap.keySet()
 				)
 					.stream()
 					.map(id -> Map.entry(
 						id,
-						newInventoryMap.getOrDefault(id, 0) - inventoryMap.getOrDefault(id, 0)
+						newInventoryMap.getOrDefault(id, 0) - shop.inventoryMap.getOrDefault(id, 0)
 					))
 					.filter(entry -> entry.getValue() != 0)
 					.collect(
@@ -514,7 +513,7 @@ public class HaggleHelperPlugin extends Plugin
 					log.debug("New inventory delta={}", deltaMap.toString());
 				}
 			}
-			inventoryMap = newInventoryMap;
+			shop.inventoryMap = newInventoryMap;
 		}
 		else if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null)
 		{

@@ -31,6 +31,9 @@ public class Shop
 	private HaggleHelperConfig config;
 
 	@ToString.Exclude
+	public Map<Integer, Integer> inventoryMap = null;
+
+	@ToString.Exclude
 	private boolean lumbridgeElite;
 
 	String name;
@@ -193,6 +196,13 @@ public class Shop
 
 	public int getNumProfitableSellTo(int itemId, int cost, int itemValue)
 	{
+		if (changePer == 0)
+		{
+			return getItemPriceSellTo(itemId, itemValue) > cost + config.profitThreshold()
+				? inventoryMap.getOrDefault(itemId, 0)
+				: 0;
+		}
+
 		float percent = 100f * (cost + config.profitThreshold()) / itemValue;
 		float num = (buysAt - percent) / changePer;
 		return Math.max(0, (int) Math.ceil(num) + getStockDelta(itemId));
@@ -208,6 +218,13 @@ public class Shop
 		if (FIXED_BUY_FROM_PRICE.containsKey(itemId))
 		{
 			return 0;
+		}
+
+		if (changePer == 0)
+		{
+			return getItemPriceBuyFrom(itemId, itemValue) + config.profitThreshold() < cost
+				? getStock(itemId)
+				: 0;
 		}
 
 		int lumbModifier = lumbridgeElite && name.contains("Culinaromancer")
