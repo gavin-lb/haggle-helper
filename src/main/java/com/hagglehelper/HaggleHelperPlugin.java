@@ -203,6 +203,9 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
+	//TODO: add support for infinite-buy no-sell shops, like: The Flaming Arrow, Sunlight's Sanctum, The King's Inn
+	//TODO: add support for non-conforming shops, like Port Roberts Silk Stall
+
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
 	private static final Pattern VALUE_FAIL = Pattern.compile(
