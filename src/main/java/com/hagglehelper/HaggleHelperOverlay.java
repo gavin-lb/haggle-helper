@@ -105,8 +105,13 @@ public class HaggleHelperOverlay extends Overlay
 			}
 
 			int itemId = itemWidget.getItemId();
-			if (itemId <= 0 || (config.overlayEnabled() == OverlayMode.TRACKED &&
-				!trackedItemsManager.isTrackedItemId(itemId)))
+			if (itemId <= 0)
+			{
+				continue;
+			}
+
+			if (config.overlayEnabled() == OverlayMode.TRACKED && !trackedItemsManager
+				.isTrackedItemId(itemId))
 			{
 				continue;
 			}
@@ -118,8 +123,12 @@ public class HaggleHelperOverlay extends Overlay
 
 			ItemComposition itemComposition = itemManager.getItemComposition(itemId);
 			if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition
-				.getLinkedNoteId()) || mode == InterfaceMode.INVENTORY && !itemComposition
-					.isTradeable())
+				.getLinkedNoteId()))
+			{
+				continue;
+			}
+
+			if (mode == InterfaceMode.INVENTORY && !itemComposition.isTradeable())
 			{
 				continue;
 			}
