@@ -5569,7 +5569,7 @@
     "sellsAt" : 110
   },
   "Port Roberts Silk Stall" : {
-    "buysAt" : 100,
+    "buysAt" : 50,
     "changePer" : 0.0,
     "defaultStocks" : {
       "1733" : 5,
@@ -5577,7 +5577,7 @@
       "950" : 50
     },
     "isGeneral" : false,
-    "sellsAt" : 100
+    "sellsAt" : 50
   },
   "Port Roberts Silver Stall" : {
     "buysAt" : 70,
