@@ -44,7 +44,7 @@ public class Shop
 	int buysAt;
 	float changePer;
 	Map<Integer, Integer> defaultStocks;
-	private Map<Integer, Integer> currentStocks;
+	Map<Integer, Integer> currentStocks;
 	boolean isGeneral;
 	final Map<Integer, Integer> queue = new HashMap<>();
 

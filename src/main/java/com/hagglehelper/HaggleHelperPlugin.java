@@ -649,6 +649,7 @@ public class HaggleHelperPlugin extends Plugin
 			highlightedItemsManager.clear();
 			pendingValueItemIds.clear();
 			shop.queue.clear();
+			shop.currentStocks.clear();
 			shop = null;
 		}
 	}
