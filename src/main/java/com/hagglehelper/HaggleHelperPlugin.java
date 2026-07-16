@@ -204,7 +204,6 @@ public class HaggleHelperPlugin extends Plugin
 		.build();
 
 	// TODO: fix bug when trying to sell to full shop
-	// TODO: fix bug lingering overlay for empty item slot
 
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");

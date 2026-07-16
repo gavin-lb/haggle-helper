@@ -116,7 +116,7 @@ public class HaggleHelperOverlay extends Overlay
 				continue;
 			}
 
-			if (itemId == ItemID.COINS || itemId == ItemID.PLATINUM)
+			if (itemId == ItemID.COINS || itemId == ItemID.PLATINUM || itemId == ItemID.BLANKOBJECT)
 			{
 				continue;
 			}
