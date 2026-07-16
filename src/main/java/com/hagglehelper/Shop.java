@@ -35,6 +35,7 @@ public class Shop
 	private transient Map<Integer, Integer> inventoryMap;
 
 	@ToString.Exclude
+	@Inject
 	private transient boolean lumbridgeElite;
 
 	String name;
@@ -74,11 +75,6 @@ public class Shop
 			price -= price * 20 / 100;
 		}
 		return price;
-	}
-
-	public void setLumbridgeElite(boolean value)
-	{
-		lumbridgeElite = value;
 	}
 
 	public int getStock(int itemId)

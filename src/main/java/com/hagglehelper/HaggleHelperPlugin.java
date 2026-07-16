@@ -350,8 +350,6 @@ public class HaggleHelperPlugin extends Plugin
 			);
 		}
 
-		foundShop.setLumbridgeElite(client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1);
-
 		injector.injectMembers(foundShop);
 		log.debug("Found shop={}", foundShop);
 		return foundShop;
@@ -803,6 +801,12 @@ public class HaggleHelperPlugin extends Plugin
 		{
 			pendingValueItemIds.poll();
 		}
+	}
+
+	@Provides
+	boolean provideLumbridgeElite()
+	{
+		return client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1;
 	}
 
 	@Provides
