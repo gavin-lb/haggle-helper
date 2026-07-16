@@ -621,7 +621,7 @@ public class HaggleHelperPlugin extends Plugin
 
 		if (event.getEntry().getOption().equals("Reset"))
 		{
-			overlayPanel.reset();
+			overlayPanel.resetProfit();
 		}
 	}
 

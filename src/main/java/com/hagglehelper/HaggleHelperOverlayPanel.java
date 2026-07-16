@@ -69,8 +69,7 @@ public class HaggleHelperOverlayPanel extends OverlayPanel
 		return (int) ((long) profit * 3600 / elapsedSeconds);
 	}
 
-
-	public void reset()
+	public void resetProfit()
 	{
 		profit = 0;
 		sessionStart = null;
