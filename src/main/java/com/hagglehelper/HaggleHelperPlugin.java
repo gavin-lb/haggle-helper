@@ -205,7 +205,6 @@ public class HaggleHelperPlugin extends Plugin
 
 	// TODO: fix bug when trying to sell to full shop
 	// TODO: fix bug lingering overlay for empty item slot
-	// TODO: fix bug Trade Mismatch false positive when stock changes
 
 	private static final Pattern VALUE_PATTERN = Pattern.compile(
 		"(.+): (currently costs|shop will buy for) ([\\d,]+) coins?\\.");
@@ -485,14 +484,29 @@ public class HaggleHelperPlugin extends Plugin
 								: -shop.getRevenueBuyFrom(delta, itemId, itemValue, stock);
 						})
 						.sum();
+
 					log.debug("expected revenue={}, observed revenue={}", revenue, coins);
 					if (revenue != coins)
 					{
-						errorPopups.tradeMismatch(deltaMap, revenue, coins);
-						log.error(
-							"Trade mismatch! delta={}, expected revenue={}, observed revenue={}",
-							deltaMap, revenue, coins
-						);
+						int differenceSum = deltaMap.entrySet().stream()
+							.mapToInt(entry -> (int) (itemManager.getItemComposition(entry.getKey())
+								.getPrice() * entry.getValue() * shop.changePer / 100.0))
+							.sum();
+
+						if (differenceSum == revenue - coins)
+						{
+							log.debug(
+								"Stock refresh during trade check, delta={}, revenue={} coins={} differenceSum={}",
+								deltaMap, revenue, coins, differenceSum);
+						}
+						else
+						{
+							errorPopups.tradeMismatch(deltaMap, revenue, coins);
+							log.error(
+								"Trade mismatch! delta={}, expected revenue={}, observed revenue={}",
+								deltaMap, revenue, coins
+							);
+						}
 					}
 				}
 				else if (!deltaMap.isEmpty())
