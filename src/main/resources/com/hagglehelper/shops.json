@@ -4919,7 +4919,7 @@
     "sellsAt" : 100
   },
   "Moonrise Wines" : {
-    "buysAt" : 100,
+    "buysAt" : 70,
     "changePer" : 0.0,
     "defaultStocks" : {
       "29415" : 20,
