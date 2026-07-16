@@ -225,6 +225,11 @@ public class HaggleHelperOverlay extends Overlay
 			return;
 		}
 
+		if (!plugin.shop.isTradableWith(itemId))
+		{
+			return;
+		}
+
 		Widget widget = menuEntry.getWidget();
 		if (widget == null)
 		{
