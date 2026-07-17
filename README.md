@@ -24,34 +24,34 @@ Add items and their costs either through the side panel or by shift+right-clicki
 
 | Panel | | Shift+RMB |
 | :---: | :-: | :---: |
-| ![panel](https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/panel-tracking.gif) | | ![application demo](https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/shift-rmb-tracking.gif) |
+| <img src="docs/images/panel-tracking.webp"> | | <img src="docs/images/shift-rmb-tracking.webp"> |
 
 If you'd rather not track items individually, change the relevant config option from **"Tracked"** to **"All"** and Haggle Helper will work for untracked items using their current Grand Exchange price, as well as tracked ones using their custom costs.
 
 ## Config options
 
-<img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/config.png" align="left" hspace="40">
+<img src="docs/images/config.png" align="left" hspace="40">
 
 ### <u>Interface mode:</u>
  - **Inventory:** Display overlays/tooltips in the inventory only
  - **Shop:** Display overlays/tooltips in the shop only
  - **Both:** Display overlays/tooltips in both
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/interface-mode.gif" width="450">
+ <img src="docs/images/interface-mode.webp" width="450">
 
 ### <u>Overlay:</u>
  - **None:** Do not display overlays
  - **Tracked:** Display overlays for tracked items only
  - **All:** Display overlays for all items (using GE price for non-tracked)
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/overlay.png">
+ <img src="docs/images/overlay.png">
 
 ### <u>Tooltip:</u>
  - **None:** Do not display tooltips
  - **Tracked:** Display tooltips for tracked items only
  - **All:** Display tooltips for all items (using GE price for non-tracked)
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/tooltips.gif" width="450">
+ <img src="docs/images/tooltips.webp" width="450">
 
 ### <u>Block unprofitable:</u>
  - **None:** Do not block unprofitable transactions
@@ -60,19 +60,19 @@ If you'd rather not track items individually, change the relevant config option 
 
 A transaction will be considered unprofitable if: **(1)** the profit is negative, or **(2)** the profit doesn't exceed the *profit threshold* per item, or **(3)** in the case when more than the optimal number of items are being sold, the absolute difference between the profit and the maximum possible profit (ie. the "lost profit") is greater than the *bulk loss allowance* (ie. a loss up to the threshold is tolerated for convenience)
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/block-unprofitable.gif">
+ <img src="docs/images/block-unprofitable.webp">
 
 ### <u>Profit info:</u>
 
  - Show the profit info panel:
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/profit-info.png">
+ <img src="docs/images/profit-info.png">
 
 ### <u>Auto cost from GE:</u>
 
  - Automatically populate the "Cost (gp):" box with the item's GE price when tracking items via the panel
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/auto-cost.gif">
+ <img src="docs/images/auto-cost.webp">
 
 ### <u>Shift+RMB entry</u>
 
@@ -82,13 +82,13 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
 
  - The per-item profit amount that must be exceeded for an item to be considered profitable, as described in the "Block unprofitable" section above. This value is useful when obtaining items has an inherent opportunity cost or other such associated costs, so selling for only, say, a few gp profit each would be undesirable. 
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/profit-threshold.gif">
+ <img src="docs/images/profit-threshold.webp">
 
 ### <u>Bulk loss allowance</u>
 
  - The allowed profit loss, as compared to the maximum possible amount, tolerated when performing a bulk transaction. For example, say only 8 are items profitable but the "Sell 10" option is being used: if the absolute difference between the profit from selling 10 and selling 8 is less than the bulk loss allowance, then the transaction will be allowed; if it exceeds the allowance then it will be blocked (assuming block unprofitable is enabled).
 
- <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/bulk-loss-allowance.gif">
+ <img src="docs/images/bulk-loss-allowance.webp">
 
 
 ## Overlay - Box
