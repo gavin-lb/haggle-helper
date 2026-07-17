@@ -423,7 +423,12 @@ public class Shop
 			log.debug(
 				"Allowing profitable transaction: amount={} queued={} profit={} profitDelta={} item={}",
 				amount, queued, profit, profitDelta, item);
-			queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY ? amount : -amount));
+
+			queue.put(item.id, queued + (item.mode == InterfaceMode.INVENTORY
+				? Math.min(amount, inventoryMap.get(item.id))
+				: -Math.min(amount, getStock(item.id)))
+			);
+
 			item.numProfitable -= amount;
 			item.maxProfit -= profit;
 			item.currentPrice = getItemPrice(item);
