@@ -9,12 +9,12 @@ Helps you haggle with NPC shops to maximize profit. Track your item costs, visua
 Haggle Helper can:
 
 - Highlight profitable and unprofitable shop sales with configurable overlays
-- Show how many items can be sold profitably (Sell 1, Sell 5, Sell 10, etc.)
+- Show how many items can be traded profitably (Sell 1, Sell 5, Sell 10, etc.)
 - Display current buy/sell price and potential profit directly on item overlays
 - Show tooltips detailing the revenue and profit of the current action
 - Block unprofitable transactions with configurable allowance for bulk transactions
-- Display a profit summary panel with total profit and profit/hr
-- Automatically import Grand Exchange prices when adding tracked items
+- Monitor total profit and profit/hr in a dedicated info panel
+- Track custom item costs or automatically use Grand Exchange prices
 - Fully customizable colors, text displays, and overlay positioning
 
 
@@ -64,19 +64,19 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
 
 ### <u>Profit info:</u>
 
- - Whether to show the profit info panel:
+ - Show the profit info panel:
 
  <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/profit-info.png">
 
 ### <u>Auto cost from GE:</u>
 
- - Whether to automatically populate the "Cost (gp):" box with the item's GE price when tracking items via the panel
+ - Automatically populate the "Cost (gp):" box with the item's GE price when tracking items via the panel
 
  <img src="https://raw.githubusercontent.com/gavin-lb/haggle-helper/master/docs/images/auto-cost.gif">
 
 ### <u>Shift+RMB entry</u>
 
- - Whether to add a "Track item" entry to the menu when shift-right-clicking an item. 
+ - Add a "Track item" entry to the menu when shift-right-clicking an item. 
 
 ### <u>Profit threshold</u>
 
@@ -100,10 +100,10 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
  - The pixel padding of the overlay box
 
 ### <u>Show fill</u>
- - Whether to show the colored background of the overlay box
+ - Show the colored background of the overlay box
 
 ### <u>Show border</u>
- - Whether to show the colored border of the overlay box
+ - Show the colored border of the overlay box
 
 ### <u>Colors</u>
  - **Sell 10:** the color used when "Sell 10" option is profitable
@@ -115,7 +115,7 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
 ## Overlay - Profitable Amount
 
 ### <u>Show</u>
- - Whether to show the profitable amount, ie. the number of items which are profitable
+ - Show the profitable amount, ie. the number of items which are profitable
 
 ### <u>Offset</u>
  - The pixel offset for the profitable amount text - by default it is in the bottom left
@@ -127,7 +127,7 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
 ## Overlay - Total Profit
 
 ### <u>Show</u>
- - Whether to show the total profit amount, ie. the profit made from the profitable amount
+ - Show the total profit amount, ie. the profit made from the profitable amount
 
 ### <u>Offset</u>
  - The pixel offset for the total profit text - by default it is in the bottom right
@@ -136,13 +136,13 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
  - The color of the total profit text
 
 ### <u>Abbreviate</u>
-- Whether to abbreviate the total profit text when appropriate, eg. 54321 becomes 54.3k
+- Abbreviate the total profit text when appropriate, eg. 54321 becomes 54.3k
 
 
 ## Overlay - Current Price
 
 ### <u>Show</u>
- - Whether to show the current buy/sell price of the item - by default it is off
+ - Show the current buy/sell price of the item - by default it is off
 
 ### <u>Offset</u>
  - The pixel offset for the current price text - by default it is in the center right
@@ -151,7 +151,4 @@ A transaction will be considered unprofitable if: **(1)** the profit is negative
  - The color of the current price text
 
 ### <u>Abbreviate</u>
-- Whether to abbreviate the current price text when appropriate, eg. 54321 becomes 54.3k
-
-
-
+ - Abbreviate the current price text when appropriate, eg. 54321 becomes 54.3k
