@@ -573,17 +573,6 @@ public class HaggleHelperPlugin extends Plugin
 			return;
 		}
 
-		if (config.blockUnprofitable() == OverlayMode.NONE)
-		{
-			return;
-		}
-
-		if (config.blockUnprofitable() == OverlayMode.TRACKED && !trackedItemsManager
-			.isTrackedItemId(eventItemId))
-		{
-			return;
-		}
-
 		HighlightedItem item;
 		if (menuOption.contains("Buy "))
 		{
@@ -614,6 +603,17 @@ public class HaggleHelperPlugin extends Plugin
 		}
 		catch (UnprofitableTransactionException e)
 		{
+			if (config.blockUnprofitable() == OverlayMode.NONE)
+			{
+				return;
+			}
+
+			if (config.blockUnprofitable() == OverlayMode.TRACKED && !trackedItemsManager
+				.isTrackedItemId(eventItemId))
+			{
+				return;
+			}
+
 			event.consume();
 			client.addChatMessage(
 				ChatMessageType.GAMEMESSAGE,
