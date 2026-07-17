@@ -2,7 +2,7 @@
 [![Active Installs](http://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/haggle-helper)](https://runelite.net/plugin-hub/show/haggle-helper)
 [![Plugin Rank](http://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/rank/plugin/haggle-helper)](https://runelite.net/plugin-hub/show/haggle-helper    )
 
-### Helps you haggle with NPC shops to maximize profit. Track your item costs, visualize profitable quantities and total profit, see current prices, prevent unprofitable sales, see your total profit and profit/hr, and more!
+### Helps you haggle with NPC shops to maximize profit. Track your item costs, visualize profitable quantities and total profit, see current prices, prevent unprofitable sales, monitor total profit and profit/hr, and more!
 
 ## Features
 
