@@ -477,7 +477,7 @@ public class HaggleHelperPlugin extends Plugin
 						{
 							int itemId = entry.getKey();
 							int delta = entry.getValue();
-							int stock = shop.getStock(itemId) + delta;
+							int stock = shop.currentStocks.getOrDefault(itemId, 0) + delta;
 							int itemValue = itemManager.getItemComposition(itemId).getPrice();
 
 							return delta < 0
