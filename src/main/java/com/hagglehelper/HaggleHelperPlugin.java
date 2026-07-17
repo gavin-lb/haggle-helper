@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.KeyCode;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
@@ -363,6 +364,92 @@ public class HaggleHelperPlugin extends Plugin
 			: null;
 	}
 
+	private void updateInventoryMap(Item[] items)
+	{
+		@SuppressWarnings("null") Map<Integer, Integer> newInventoryMap = Arrays.stream(
+			items
+		)
+			.filter(item -> item.getId() != -1)
+			.collect(Collectors.toMap(
+				item -> trackedItemsManager.getUnnotedId(item.getId()),
+				Item::getQuantity,
+				Integer::sum
+			));
+
+		if (inventoryMap != null)
+		{
+			@SuppressWarnings("null") Map<Integer, Integer> deltaMap = Sets.union(
+				inventoryMap.keySet(),
+				newInventoryMap.keySet()
+			)
+				.stream()
+				.map(id -> Map.entry(
+					id,
+					newInventoryMap.getOrDefault(id, 0) - inventoryMap.getOrDefault(id, 0)
+				))
+				.filter(entry -> entry.getValue() != 0)
+				.collect(
+					Collectors.toMap(
+						Map.Entry::getKey,
+						Map.Entry::getValue
+					)
+				);
+
+			if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null && deltaMap.containsKey(
+				ItemID.COINS) && shop != null)
+			{
+				log.debug("New shop trade delta={}", deltaMap.toString());
+				int coins = deltaMap.remove(ItemID.COINS);
+
+				int revenue = deltaMap.entrySet().stream()
+					.mapToInt(entry ->
+					{
+						int itemId = entry.getKey();
+						int delta = entry.getValue();
+						int stock = shop.currentStocks.getOrDefault(itemId, 0) + delta;
+						int itemValue = itemManager.getItemComposition(itemId).getPrice();
+
+						return delta < 0
+							? shop.getRevenueSellTo(-delta, itemId, itemValue, stock)
+							: -shop.getRevenueBuyFrom(delta, itemId, itemValue, stock);
+					})
+					.sum();
+
+				log.debug("expected revenue={}, observed revenue={}", revenue, coins);
+				if (revenue != coins)
+				{
+					int differenceSum = deltaMap.entrySet().stream()
+						.mapToInt(entry -> (int) (itemManager.getItemComposition(entry.getKey())
+							.getPrice() * entry.getValue() * shop.changePer / 100.0))
+						.sum();
+
+					if (differenceSum == revenue - coins)
+					{
+						log.debug(
+							"Stock refresh during trade check, delta={}, revenue={} coins={} differenceSum={}",
+							deltaMap, revenue, coins, differenceSum);
+					}
+					else
+					{
+						errorPopups.tradeMismatch(deltaMap, revenue, coins);
+						log.error(
+							"Trade mismatch! delta={}, expected revenue={}, observed revenue={}",
+							deltaMap, revenue, coins
+						);
+					}
+				}
+			}
+			else if (!deltaMap.isEmpty())
+			{
+				log.debug("New inventory delta={}", deltaMap.toString());
+			}
+		}
+		log.debug("Updating inventory map={} newMap={} items={}",
+			inventoryMap, newInventoryMap, items);
+
+		inventoryMap = newInventoryMap;
+	}
+
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -437,85 +524,7 @@ public class HaggleHelperPlugin extends Plugin
 		int containerId = event.getContainerId();
 		if (containerId == InventoryID.INV)
 		{
-			@SuppressWarnings("null") Map<Integer, Integer> newInventoryMap = Arrays.stream(
-				event.getItemContainer().getItems()
-			)
-				.filter(item -> item.getId() != -1)
-				.collect(Collectors.toMap(
-					item -> trackedItemsManager.getUnnotedId(item.getId()),
-					Item::getQuantity,
-					Integer::sum
-				));
-
-			if (inventoryMap != null)
-			{
-				@SuppressWarnings("null") Map<Integer, Integer> deltaMap = Sets.union(
-					inventoryMap.keySet(),
-					newInventoryMap.keySet()
-				)
-					.stream()
-					.map(id -> Map.entry(
-						id,
-						newInventoryMap.getOrDefault(id, 0) - inventoryMap.getOrDefault(id, 0)
-					))
-					.filter(entry -> entry.getValue() != 0)
-					.collect(
-						Collectors.toMap(
-							Map.Entry::getKey,
-							Map.Entry::getValue
-						)
-					);
-
-				if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null && deltaMap.containsKey(
-					ItemID.COINS))
-				{
-					log.debug("New shop trade delta={}", deltaMap.toString());
-					int coins = deltaMap.remove(ItemID.COINS);
-
-					int revenue = deltaMap.entrySet().stream()
-						.mapToInt(entry ->
-						{
-							int itemId = entry.getKey();
-							int delta = entry.getValue();
-							int stock = shop.currentStocks.getOrDefault(itemId, 0) + delta;
-							int itemValue = itemManager.getItemComposition(itemId).getPrice();
-
-							return delta < 0
-								? shop.getRevenueSellTo(-delta, itemId, itemValue, stock)
-								: -shop.getRevenueBuyFrom(delta, itemId, itemValue, stock);
-						})
-						.sum();
-
-					log.debug("expected revenue={}, observed revenue={}", revenue, coins);
-					if (revenue != coins)
-					{
-						int differenceSum = deltaMap.entrySet().stream()
-							.mapToInt(entry -> (int) (itemManager.getItemComposition(entry.getKey())
-								.getPrice() * entry.getValue() * shop.changePer / 100.0))
-							.sum();
-
-						if (differenceSum == revenue - coins)
-						{
-							log.debug(
-								"Stock refresh during trade check, delta={}, revenue={} coins={} differenceSum={}",
-								deltaMap, revenue, coins, differenceSum);
-						}
-						else
-						{
-							errorPopups.tradeMismatch(deltaMap, revenue, coins);
-							log.error(
-								"Trade mismatch! delta={}, expected revenue={}, observed revenue={}",
-								deltaMap, revenue, coins
-							);
-						}
-					}
-				}
-				else if (!deltaMap.isEmpty())
-				{
-					log.debug("New inventory delta={}", deltaMap.toString());
-				}
-			}
-			inventoryMap = newInventoryMap;
+			updateInventoryMap(event.getItemContainer().getItems());
 		}
 		else if (client.getWidget(InterfaceID.Shopmain.ITEMS) != null)
 		{
@@ -532,7 +541,7 @@ public class HaggleHelperPlugin extends Plugin
 				if (config.errorReports())
 				{
 					Widget frame = client.getWidget(InterfaceID.Shopmain.FRAME);
-					if (frame != null)
+					if (frame != null && frame.getDynamicChildren().length > 0)
 					{
 						String shopName = frame.getDynamicChildren()[1].getText();
 						errorPopups.unknownShop(containerId, shopName, items);
@@ -650,6 +659,11 @@ public class HaggleHelperPlugin extends Plugin
 			pendingValueItemIds.clear();
 			shop.queue.clear();
 			shop.currentStocks.clear();
+			ItemContainer inv = client.getItemContainer(InventoryID.INV);
+			if (inv != null)
+			{
+				updateInventoryMap(inv.getItems());
+			}
 			shop = null;
 		}
 	}
