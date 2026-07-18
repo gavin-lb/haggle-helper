@@ -952,7 +952,7 @@
     "isGeneral" : false,
     "sellsAt" : 120
   },
-  "Betty's Magic Emporium." : {
+  "Betty's Magic Emporium" : {
     "buysAt" : 60,
     "changePer" : 0.1,
     "defaultStocks" : {
