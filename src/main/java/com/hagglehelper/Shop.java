@@ -32,6 +32,10 @@ public class Shop
 
 	@ToString.Exclude
 	@Inject
+	private transient TrackedItemsManager trackedItemsManager;
+
+	@ToString.Exclude
+	@Inject
 	private transient Map<Integer, Integer> inventoryMap;
 
 	@ToString.Exclude
@@ -388,7 +392,9 @@ public class Shop
 
 	public boolean isTradableWith(int itemId)
 	{
-		return isGeneral || defaultStocks.containsKey(itemId) || currentStocks.containsKey(itemId);
+		int unnotedId = trackedItemsManager.getUnnotedId(itemId);
+		return isGeneral || defaultStocks.containsKey(itemId) || currentStocks.containsKey(
+			itemId) || defaultStocks.containsKey(unnotedId) || currentStocks.containsKey(unnotedId);
 	}
 
 	public boolean isTradableWith(HighlightedItem item)

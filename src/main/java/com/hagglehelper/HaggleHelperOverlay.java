@@ -10,7 +10,6 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.ItemComposition;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.Point;
 import net.runelite.api.gameval.InterfaceID;
@@ -121,14 +120,13 @@ public class HaggleHelperOverlay extends Overlay
 				continue;
 			}
 
-			ItemComposition itemComposition = itemManager.getItemComposition(itemId);
-			if (!plugin.shop.isTradableWith(itemId) && !plugin.shop.isTradableWith(itemComposition
-				.getLinkedNoteId()))
+			if (!plugin.shop.isTradableWith(itemId))
 			{
 				continue;
 			}
 
-			if (mode == InterfaceMode.INVENTORY && !itemComposition.isTradeable())
+			if (mode == InterfaceMode.INVENTORY && !itemManager.getItemComposition(itemId)
+				.isTradeable())
 			{
 				continue;
 			}
