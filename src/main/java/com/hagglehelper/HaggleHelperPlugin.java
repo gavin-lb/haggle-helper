@@ -42,7 +42,6 @@ import net.runelite.api.MenuEntry;
 import net.runelite.api.PlayerComposition;
 import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
-import net.runelite.api.Varbits;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuOpened;
@@ -53,6 +52,7 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarClientID;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.kit.KitType;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
@@ -821,7 +821,7 @@ public class HaggleHelperPlugin extends Plugin
 	@Provides
 	boolean provideLumbridgeElite()
 	{
-		return client.getVarbitValue(Varbits.DIARY_LUMBRIDGE_ELITE) == 1;
+		return client.getVarbitValue(VarbitID.LUMBRIDGE_DIARY_ELITE_COMPLETE) == 1;
 	}
 
 	@Provides
