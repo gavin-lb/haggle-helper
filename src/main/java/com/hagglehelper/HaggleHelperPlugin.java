@@ -1,5 +1,6 @@
 package com.hagglehelper;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
-import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,7 +31,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -75,20 +75,6 @@ import net.runelite.client.util.Text;
 )
 public class HaggleHelperPlugin extends Plugin
 {
-	@RequiredArgsConstructor
-	private static final class ShopOverride
-	{
-		private final Map<String, String> shops;
-		private final BooleanSupplier enabled;
-
-		String apply(String shopName)
-		{
-			return shops.containsKey(shopName) && enabled.getAsBoolean()
-				? shops.get(shopName)
-				: shopName;
-		}
-	}
-
 	private static final String SHOPS_RESOURCE = "com/hagglehelper/shops.json";
 	private static final Type SHOP_TYPE = new TypeToken<Map<String, Shop>>()
 	{
@@ -127,8 +113,18 @@ public class HaggleHelperPlugin extends Plugin
 	);
 
 	private static final Map<String, String> ENTER_THE_ABYSS_SHOPS = ImmutableMap.of(
-		"Battle Runes", "Battle Runes(Enter the Abyss)"
-	);
+		"Battle Runes", "Battle Runes(Enter the Abyss)");
+
+	private static final List<Quest> RFD_SUBQUESTS = ImmutableList.of(
+		Quest.RECIPE_FOR_DISASTER__MOUNTAIN_DWARF,
+		Quest.RECIPE_FOR_DISASTER__WARTFACE__BENTNOZE,
+		Quest.RECIPE_FOR_DISASTER__PIRATE_PETE,
+		Quest.RECIPE_FOR_DISASTER__LUMBRIDGE_GUIDE,
+		Quest.RECIPE_FOR_DISASTER__EVIL_DAVE,
+		Quest.RECIPE_FOR_DISASTER__SKRACH_UGLOGWEE,
+		Quest.RECIPE_FOR_DISASTER__SIR_AMIK_VARZE,
+		Quest.RECIPE_FOR_DISASTER__KING_AWOWOGEI,
+		Quest.RECIPE_FOR_DISASTER__CULINAROMANCER);
 
 	private static final Map<Integer, String> PROBLEM_INVENTORY_IDS = ImmutableMap
 		.<Integer, String>builder()
@@ -162,46 +158,6 @@ public class HaggleHelperPlugin extends Plugin
 		.put(InventoryID.WHITEKNIGHT_ARMOURY4, "White Knight Armoury(Noble)")
 		.put(InventoryID.WHITEKNIGHT_ARMOURY5, "White Knight Armoury(Adept)")
 		.put(InventoryID.WHITEKNIGHT_ARMOURY6, "White Knight Armoury(Master)")
-		.put(InventoryID.HUNDRED_FOODCHEST1, "Culinaromancer's Chest(food, 0 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST2, "Culinaromancer's Chest(food, 1 Subquest)")
-		.put(InventoryID.HUNDRED_FOODCHEST3, "Culinaromancer's Chest(food, 2 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST4, "Culinaromancer's Chest(food, 3 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST5, "Culinaromancer's Chest(food, 4 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST6, "Culinaromancer's Chest(food, 5 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST7, "Culinaromancer's Chest(food, 6 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST8, "Culinaromancer's Chest(food, 7 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST9, "Culinaromancer's Chest(food, 8 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST10, "Culinaromancer's Chest(food, full)")
-		.put(InventoryID.HUNDRED_REWARDCHEST1, "Culinaromancer's Chest(0 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST2, "Culinaromancer's Chest(1 Subquest)")
-		.put(InventoryID.HUNDRED_REWARDCHEST3, "Culinaromancer's Chest(2 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST4, "Culinaromancer's Chest(3 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST5, "Culinaromancer's Chest(4 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST6, "Culinaromancer's Chest(5 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST7, "Culinaromancer's Chest(6 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST8, "Culinaromancer's Chest(7 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST9, "Culinaromancer's Chest(8 Subquests)")
-		.put(InventoryID.HUNDRED_REWARDCHEST10, "Culinaromancer's Chest(full)")
-		.put(InventoryID.HUNDRED_FOODCHEST1_UIM, "Culinaromancer's Chest(food, 0 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST1_GIM, "Culinaromancer's Chest(food, 0 Subquest)")
-		.put(InventoryID.HUNDRED_FOODCHEST2_UIM, "Culinaromancer's Chest(food, 1 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST2_GIM, "Culinaromancer's Chest(food, 1 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST3_UIM, "Culinaromancer's Chest(food, 2 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST3_GIM, "Culinaromancer's Chest(food, 2 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST4_UIM, "Culinaromancer's Chest(food, 3 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST4_GIM, "Culinaromancer's Chest(food, 3 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST5_UIM, "Culinaromancer's Chest(food, 4 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST5_GIM, "Culinaromancer's Chest(food, 4 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST6_UIM, "Culinaromancer's Chest(food, 5 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST6_GIM, "Culinaromancer's Chest(food, 5 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST7_UIM, "Culinaromancer's Chest(food, 6 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST7_GIM, "Culinaromancer's Chest(food, 6 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST8_UIM, "Culinaromancer's Chest(food, 7 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST8_GIM, "Culinaromancer's Chest(food, 7 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST9_UIM, "Culinaromancer's Chest(food, 8 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST9_GIM, "Culinaromancer's Chest(food, 8 Subquests)")
-		.put(InventoryID.HUNDRED_FOODCHEST10_UIM, "Culinaromancer's Chest(food, full)")
-		.put(InventoryID.HUNDRED_FOODCHEST10_GIM, "Culinaromancer's Chest(food, full)")
 		.build();
 
 	//TODO: add support for infinite-buy no-sell shops, like: The Flaming Arrow, Sunlight's Sanctum, The King's Inn
@@ -257,27 +213,36 @@ public class HaggleHelperPlugin extends Plugin
 
 	private NavigationButton navButton;
 	private Queue<Integer> pendingValueItemIds = new ArrayDeque<>();
-	private final List<ShopOverride> shopOverrides = List.of(
-		new ShopOverride(
-			KARAMJA_EASY_SHOPS,
-			() -> KARAMJA_EASY_GLOVES.contains(getGlovesItemId())
-		),
-		new ShopOverride(
-			KARAMJA_HARD_SHOPS,
-			() -> KARAMJA_HARD_GLOVES.contains(getGlovesItemId())
-		),
-		new ShopOverride(
-			LUNAR_DIPLOMACY_SHOPS,
-			() -> Quest.LUNAR_DIPLOMACY.getState(client) == QuestState.FINISHED
-		),
-		new ShopOverride(
-			CONTACT_SHOPS,
-			() -> Quest.CONTACT.getState(client) == QuestState.FINISHED
-		),
-		new ShopOverride(
-			ENTER_THE_ABYSS_SHOPS,
-			() -> Quest.ENTER_THE_ABYSS.getState(client) == QuestState.FINISHED
-		)
+	private final List<Function<String, String>> shopOverrides = List.of(
+		(name) -> KARAMJA_EASY_SHOPS.containsKey(name) && KARAMJA_EASY_GLOVES.contains(
+			getGlovesItemId()) ? KARAMJA_EASY_SHOPS.get(name) : name,
+		(name) -> KARAMJA_HARD_SHOPS.containsKey(name) && KARAMJA_HARD_GLOVES.contains(
+			getGlovesItemId()) ? KARAMJA_HARD_SHOPS.get(name) : name,
+		(name) -> LUNAR_DIPLOMACY_SHOPS.containsKey(name) && Quest.CONTACT.getState(
+			client) == QuestState.FINISHED ? LUNAR_DIPLOMACY_SHOPS.get(name) : name,
+		(name) -> CONTACT_SHOPS.containsKey(name) && Quest.LUNAR_DIPLOMACY.getState(
+			client) == QuestState.FINISHED ? CONTACT_SHOPS.get(name) : name,
+		(name) -> ENTER_THE_ABYSS_SHOPS.containsKey(name) && Quest.ENTER_THE_ABYSS.getState(
+			client) == QuestState.FINISHED ? ENTER_THE_ABYSS_SHOPS.get(name) : name,
+		(name) ->
+		{
+			if (name.equals("Culinaromancer's Chest"))
+			{
+				log.debug("Culinaromancer's Chest detected");
+				int completedSubquests = (int) RFD_SUBQUESTS.stream()
+					.filter(q -> q.getState(client) == QuestState.FINISHED)
+					.count();
+
+				return String.format(
+					"Culinaromancer's Chest(food, %s)",
+					completedSubquests == 9
+						? "full"
+						: completedSubquests + " Subquests"
+				);
+			}
+
+			return name;
+		}
 	);
 
 	public Map<Integer, Integer> inventoryMap = null;
@@ -337,9 +302,15 @@ public class HaggleHelperPlugin extends Plugin
 
 	private Shop getShop(String shopName)
 	{
-		for (ShopOverride override : shopOverrides)
+		for (Function<String, String> override : shopOverrides)
 		{
-			shopName = override.apply(shopName);
+			String overrideName = override.apply(shopName);
+
+			if (overrideName != shopName)
+			{
+				log.debug("Overriding shopName={} with overrideName={}", shopName, overrideName);
+				shopName = overrideName;
+			}
 		}
 
 		Shop foundShop = shopsMap.get(shopName);
@@ -535,6 +506,16 @@ public class HaggleHelperPlugin extends Plugin
 			);
 
 			Item[] items = event.getItemContainer().getItems();
+
+			// Can't check whether it is the food or gloves chest upon opening as the items aren't
+			// yet populated, so we assume food chest then on first itemContainerChange event we check 
+			// if it contains gloves:
+			if (shop.name.contains("Culinaromancer's Chest(food") && event.getItemContainer()
+				.contains(ItemID.HUNDRED_GAUNTLETS_LEVEL_1))
+			{
+				shop = getShop(shop.name.replace("food, ", ""));
+			}
+
 			if (shop == null)
 			{
 				log.error("Shopmain.ITEMS changed with no shop!");
